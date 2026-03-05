@@ -339,16 +339,17 @@ describe('Game Reducer', () => {
       //   Also g8(where king is).
       // ALL adjacent attacked! Checkmate!
 
-      // FEN before move: Black Kg8, White Ka5, Ra7, Rh6
+      // Back-rank mate: Kg8 boxed in by own pawns on f7/g7/h7.
+      // Ra1-a8# delivers mate — rank 8 controlled, pawns block all escapes.
       const state = createGameState({
-        fen: '6k1/R7/7R/K7/8/8/8/8 w - - 0 1',
+        fen: '6k1/5ppp/8/8/8/8/8/R3K3 w - - 0 1',
         gold: { white: 5, black: 5 },
       });
 
       const result = applyAction(state, {
         type: 'move',
-        from: sq('h6'),
-        to: sq('h8'),
+        from: sq('a1'),
+        to: sq('a8'),
       });
 
       const newState = expectValidAction(result);
@@ -386,14 +387,14 @@ describe('Game Reducer', () => {
 
     it('sets the winner when checkmate occurs', () => {
       const state = createGameState({
-        fen: '6k1/R7/7R/K7/8/8/8/8 w - - 0 1',
+        fen: '6k1/5ppp/8/8/8/8/8/R3K3 w - - 0 1',
         gold: { white: 5, black: 5 },
       });
 
       const result = applyAction(state, {
         type: 'move',
-        from: sq('h6'),
-        to: sq('h8'),
+        from: sq('a1'),
+        to: sq('a8'),
       });
 
       const newState = expectValidAction(result);
@@ -455,9 +456,9 @@ describe('Game Reducer', () => {
       // W7: 4+1=5g, place rook (-5g) → 0g
       // B7: 9+1=10g, move → 10g
       // W8: 0+1=1g, move Ra1-a6+ → 1g
-      // B8: 10+1=11g, move Kg6-g7 → 11g
+      // B8: 10+1=11g, move Kg6-f7 → 11g
       // W9: 1+1=2g, move Rh1-h7+ → 2g
-      // B9: 11+1=12g, move Kg7-g8 → 12g
+      // B9: 11+1=12g, move Kf7-f8 → 12g
       // W10: 2+1=3g, move Ra6-a8# → 3g (CHECKMATE)
 
       const actions: GameAction[] = [
@@ -484,11 +485,14 @@ describe('Game Reducer', () => {
         { type: 'move', from: sq('f5'), to: sq('g6') },   // B7: Kf5-g6
 
         // Phase 5: Ladder mate
+        // Key: route black king to f-file so it can't capture Rh7 (2 files away)
         { type: 'move', from: sq('a1'), to: sq('a6') },   // W8: Ra1-a6+ (check!)
-        { type: 'move', from: sq('g6'), to: sq('g7') },   // B8: Kg6-g7
-        { type: 'move', from: sq('h1'), to: sq('h7') },   // W9: Rh1-h7+ (check!)
-        { type: 'move', from: sq('g7'), to: sq('g8') },   // B9: Kg7-g8
+        { type: 'move', from: sq('g6'), to: sq('f7') },   // B8: Kg6-f7 (off rank 6)
+        { type: 'move', from: sq('h1'), to: sq('h7') },   // W9: Rh1-h7+ (check on rank 7!)
+        { type: 'move', from: sq('f7'), to: sq('f8') },   // B9: Kf7-f8 (off rank 7)
         { type: 'move', from: sq('a6'), to: sq('a8') },   // W10: Ra6-a8# (CHECKMATE!)
+        // Final: Ra8 controls rank 8, Rh7 controls rank 7. Kf8 can't reach Rh7 (2 files away).
+        // All adjacent: e7(R7), e8(R8), f7(R7), g7(R7), g8(R8) — all attacked.
       ];
 
       const state = createInitialState();
