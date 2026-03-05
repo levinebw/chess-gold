@@ -70,3 +70,26 @@ export function createGoldState(
 ): Pick<GameState, 'gold'> {
   return { gold: { white, black } };
 }
+
+/**
+ * Creates a state where the specified player's king is in check.
+ * Uses realistic FEN positions with an attacking piece.
+ */
+export function createCheckState(color: Color): GameState {
+  if (color === 'white') {
+    // Black rook on a1 checks white king on e1 (white to move)
+    return createGameState({
+      fen: '4k3/8/8/8/8/8/8/r3K3 w - - 0 1',
+      turn: 'white',
+      status: 'check',
+      gold: { white: 10, black: 3 },
+    });
+  }
+  // White rook on a8 checks black king on e8 (black to move)
+  return createGameState({
+    fen: 'R3k3/8/8/8/8/8/8/4K3 b - - 0 1',
+    turn: 'black',
+    status: 'check',
+    gold: { white: 3, black: 10 },
+  });
+}
