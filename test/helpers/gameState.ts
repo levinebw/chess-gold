@@ -1,4 +1,4 @@
-import type { GameState, Color } from '../../src/engine/types.ts';
+import type { GameState, GameAction, GameError, Color } from '../../src/engine/types.ts';
 import { CHESS_GOLD_CONFIG, MODE_PRESETS } from '../../src/engine/config.ts';
 
 // Kings-only starting FEN: white king on e1, black king on e8
@@ -92,4 +92,28 @@ export function createCheckState(color: Color): GameState {
     status: 'check',
     gold: { white: 3, black: 10 },
   });
+}
+
+/**
+ * Applies a sequence of actions to a game state.
+ * Requires an applyAction function as parameter to avoid circular imports.
+ * Throws if any action returns a GameError.
+ */
+export function applyActions(
+  state: GameState,
+  actions: GameAction[],
+  applyAction: (s: GameState, a: GameAction) => GameState | GameError,
+): GameState {
+  let current = state;
+  for (let i = 0; i < actions.length; i++) {
+    const result = applyAction(current, actions[i]);
+    if ('type' in result && result.type === 'error') {
+      throw new Error(
+        `Action ${i} failed: ${(result as GameError).message} ` +
+        `(action: ${JSON.stringify(actions[i])})`,
+      );
+    }
+    current = result as GameState;
+  }
+  return current;
 }
