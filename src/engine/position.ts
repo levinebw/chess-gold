@@ -37,7 +37,7 @@ export function isCheckmate(state: GameState): boolean {
 
 export function isStalemate(state: GameState): boolean {
   const pos = createPosition(state.fen);
-  return !pos.isCheck() && pos.isEnd();
+  return pos.isStalemate();
 }
 
 export function applyMove(state: GameState, from: Square, to: Square, promotion?: Role): GameState {

@@ -1,2 +1,112 @@
-// Top-level game reducer: applyAction(state, action)
-// Implementation coming in Task 002
+import { parseFen, makeFen } from 'chessops/fen';
+import type { GameState, GameAction, GameError, GameModeConfig } from './types.ts';
+import { CHESS_GOLD_CONFIG, MODE_PRESETS } from './config.ts';
+import { awardTurnIncome, canAffordPiece, deductPurchaseCost } from './gold.ts';
+import { isValidPlacement } from './placement.ts';
+import { getLegalMoves, isCheckmate, isStalemate, applyMove } from './position.ts';
+
+const KINGS_ONLY_FEN = '4k3/8/8/8/8/8/8/4K3 w - - 0 1';
+
+export function createInitialState(modeConfig?: GameModeConfig): GameState {
+  return {
+    fen: KINGS_ONLY_FEN,
+    turn: 'white',
+    turnNumber: 1,
+    halfMoveCount: 0,
+    gold: {
+      white: CHESS_GOLD_CONFIG.startingGold,
+      black: CHESS_GOLD_CONFIG.startingGold,
+    },
+    inventory: { white: [], black: [] },
+    items: { white: [], black: [] },
+    equipment: {},
+    lootBoxes: [],
+    lootBoxesCollected: { white: 0, black: 0 },
+    status: 'active',
+    winner: null,
+    actionHistory: [],
+    modeConfig: modeConfig ?? MODE_PRESETS['chess-gold'],
+  };
+}
+
+function makeError(code: GameError['code'], message: string): GameError {
+  return { type: 'error', code, message };
+}
+
+export function applyAction(state: GameState, action: GameAction): GameState | GameError {
+  // 1. Reject if game is over
+  if (state.status === 'checkmate' || state.status === 'stalemate') {
+    return makeError('GAME_OVER', 'Game is already over');
+  }
+
+  // 2. Award turn income
+  let current = awardTurnIncome(state);
+  const actingPlayer = current.turn;
+
+  // 3. Validate and apply action
+  if (action.type === 'move') {
+    const legalMoves = getLegalMoves(current);
+    const destsFromSquare = legalMoves.get(action.from);
+    if (!destsFromSquare || !destsFromSquare.includes(action.to)) {
+      return makeError('ILLEGAL_MOVE', 'Illegal move');
+    }
+
+    // applyMove handles capture gold and turn flip
+    current = applyMove(current, action.from, action.to, action.promotion);
+
+  } else if (action.type === 'place') {
+    if (!canAffordPiece(current, action.piece)) {
+      return makeError('INSUFFICIENT_GOLD', 'Not enough gold');
+    }
+    if (!isValidPlacement(current, action.piece, action.square)) {
+      return makeError('INVALID_PLACEMENT', 'Invalid placement square');
+    }
+
+    current = deductPurchaseCost(current, action.piece);
+
+    // Update FEN with the placed piece
+    const setup = parseFen(current.fen);
+    if (setup.isErr) return makeError('INVALID_ACTION', 'Invalid board state');
+    setup.value.board.set(action.square, { role: action.piece, color: actingPlayer });
+    // Update the turn in the FEN setup so makeFen reflects black to move
+    setup.value.turn = actingPlayer === 'white' ? 'black' : 'white';
+    const newFen = makeFen(setup.value);
+
+    current = {
+      ...current,
+      fen: newFen,
+      turn: actingPlayer === 'white' ? 'black' : 'white',
+    };
+  }
+
+  // 4. Record action
+  current = {
+    ...current,
+    actionHistory: [...current.actionHistory, action],
+  };
+
+  // 5. Update counters
+  const newHalfMoveCount = state.halfMoveCount + 1;
+  const newTurnNumber = current.turn === 'white' ? state.turnNumber + 1 : state.turnNumber;
+  current = {
+    ...current,
+    halfMoveCount: newHalfMoveCount,
+    turnNumber: newTurnNumber,
+  };
+
+  // 6. Check game-over
+  if (isCheckmate(current)) {
+    current = {
+      ...current,
+      status: 'checkmate',
+      winner: actingPlayer,
+    };
+  } else if (isStalemate(current)) {
+    current = {
+      ...current,
+      status: 'stalemate',
+    };
+  }
+
+  return current;
+}
