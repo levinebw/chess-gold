@@ -83,14 +83,10 @@ describe('Position / Move Validation', () => {
 
   describe('checkmate detection', () => {
     it('detects checkmate', () => {
-      // Back-rank mate: white king on h1, black rook on a1, black queen on a2
-      // White king is checkmated — no escape
-      // FEN: 4k3/8/8/8/8/8/q7/7K w - - 0 1 -- not quite checkmate
-      // Better: king on g1, black queen on a1, black rook on a2 — still tricky
-      // Classic: Kh1, black Qg2 is checkmate (Qg2#)
-      // FEN: 4k3/8/8/8/8/8/6q1/7K w - - 0 1
+      // Kh1 checkmated by Qg2 defended by Rg8:
+      // g1: attacked by queen, h2: attacked by queen, g2 (capture): defended by rook
       const state = createGameState({
-        fen: '4k3/8/8/8/8/8/6q1/7K w - - 0 1',
+        fen: '4k1r1/8/8/8/8/8/6q1/7K w - - 0 1',
       });
 
       expect(isCheckmate(state)).toBe(true);
