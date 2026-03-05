@@ -2,40 +2,33 @@ import { useEffect, useRef } from 'react';
 import { Chessground } from 'chessground';
 import type { Api } from 'chessground/api';
 import type { Key } from 'chessground/types';
-import type { GameState, GameAction, Square } from '../../engine/types.ts';
-import { getLegalMoves } from '../../engine/position.ts';
+import type { Square } from '../../engine/types.ts';
+import { useGameContext } from '../context/GameContext.tsx';
 
 const FILES = 'abcdefgh';
 
-function squareToKey(sq: Square): Key {
+export function squareToKey(sq: Square): Key {
   const file = FILES[sq % 8];
   const rank = Math.floor(sq / 8) + 1;
   return `${file}${rank}` as Key;
 }
 
-function keyToSquare(key: Key): Square {
+export function keyToSquare(key: Key): Square {
   const file = key.charCodeAt(0) - 'a'.charCodeAt(0);
   const rank = parseInt(key[1]) - 1;
   return (rank * 8 + file) as Square;
 }
 
-function computeDests(state: GameState): Map<Key, Key[]> {
-  const legalMoves = getLegalMoves(state);
+function legalDestsToChessground(legalDests: Map<Square, Square[]>): Map<Key, Key[]> {
   const dests = new Map<Key, Key[]>();
-  for (const [from, toSquares] of legalMoves) {
-    const fromKey = squareToKey(from);
-    const toKeys = toSquares.map(squareToKey);
-    dests.set(fromKey, toKeys);
+  for (const [from, toSquares] of legalDests) {
+    dests.set(squareToKey(from), toSquares.map(squareToKey));
   }
   return dests;
 }
 
-interface BoardProps {
-  state: GameState;
-  dispatch: (action: GameAction) => void;
-}
-
-export function Board({ state, dispatch }: BoardProps) {
+export function Board() {
+  const { state, dispatch, legalDests, placingPiece, placementSquares, cancelPlacement } = useGameContext();
   const boardRef = useRef<HTMLDivElement>(null);
   const cgRef = useRef<Api | null>(null);
 
@@ -48,7 +41,7 @@ export function Board({ state, dispatch }: BoardProps) {
       movable: {
         free: false,
         color: state.turn,
-        dests: computeDests(state),
+        dests: legalDestsToChessground(legalDests),
       },
       events: {
         move: (orig: Key, dest: Key) => {
@@ -68,16 +61,74 @@ export function Board({ state, dispatch }: BoardProps) {
   // Sync state changes to Chessground
   useEffect(() => {
     if (!cgRef.current) return;
+
+    const isGameOver = state.status === 'checkmate' || state.status === 'stalemate';
+
     cgRef.current.set({
       fen: state.fen,
       turnColor: state.turn,
       movable: {
         free: false,
-        color: state.turn,
-        dests: computeDests(state),
+        color: isGameOver ? undefined : state.turn,
+        dests: isGameOver ? new Map() : legalDestsToChessground(legalDests),
       },
     });
-  }, [state]);
+  }, [state, legalDests]);
 
-  return <div ref={boardRef} className="board-container" />;
+  // Highlight placement squares
+  useEffect(() => {
+    if (!cgRef.current) return;
+    if (placingPiece && placementSquares.length > 0) {
+      const shapes = placementSquares.map(sq => ({
+        orig: squareToKey(sq),
+        brush: 'green',
+      }));
+      cgRef.current.setAutoShapes(shapes);
+    } else {
+      cgRef.current.setAutoShapes([]);
+    }
+  }, [placingPiece, placementSquares]);
+
+  // Handle placement clicks
+  const handleBoardClick = (e: React.MouseEvent) => {
+    if (!placingPiece || !cgRef.current) return;
+
+    const boardEl = boardRef.current;
+    if (!boardEl) return;
+
+    const rect = boardEl.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const fileIndex = Math.floor((x / rect.width) * 8);
+    const rankIndex = 7 - Math.floor((y / rect.height) * 8);
+    const square = (rankIndex * 8 + fileIndex) as Square;
+
+    if (placementSquares.includes(square)) {
+      dispatch({
+        type: 'place',
+        piece: placingPiece,
+        square,
+        fromInventory: false,
+      });
+    }
+  };
+
+  // Cancel placement on Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && placingPiece) {
+        cancelPlacement();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [placingPiece, cancelPlacement]);
+
+  return (
+    <div
+      ref={boardRef}
+      className={`board-container ${placingPiece ? 'placement-mode' : ''}`}
+      onClick={handleBoardClick}
+    />
+  );
 }

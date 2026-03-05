@@ -12,49 +12,270 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
   background: #1a1a1a;
   color: #e0e0e0;
-  display: flex;
-  justify-content: center;
   min-height: 100vh;
 }
 
 #root {
   display: flex;
   justify-content: center;
-  padding: 2rem;
+  padding: 1.5rem;
 }
+
+/* Layout */
 
 .game-layout {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 1rem;
+  max-width: 800px;
 }
 
-.game-layout h1 {
-  font-size: 1.5rem;
-  color: #d4a843;
-}
-
-.game-info {
+.game-header {
   display: flex;
   justify-content: space-between;
-  width: 480px;
-  font-size: 0.9rem;
+  align-items: center;
 }
 
-.turn-indicator {
-  font-weight: bold;
-}
-
-.active-turn {
+.game-header h1 {
+  font-size: 1.4rem;
   color: #d4a843;
-  font-weight: bold;
+}
+
+.game-content {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.board-panel {
+  flex-shrink: 0;
 }
 
 .board-container {
   width: 480px;
   height: 480px;
 }
+
+.board-container.placement-mode {
+  cursor: crosshair;
+}
+
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 200px;
+}
+
+/* Turn indicator */
+
+.turn-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+}
+
+.turn-status {
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+.turn-number {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+/* Gold display */
+
+.gold-display {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: #252525;
+  border-radius: 6px;
+}
+
+.gold-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.gold-player.active {
+  color: #d4a843;
+}
+
+.gold-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.gold-amount {
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+/* Shop */
+
+.shop {
+  background: #252525;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.shop h3 {
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.shop-pieces {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.shop-piece {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: #333;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.15s;
+}
+
+.shop-piece:hover:not(:disabled) {
+  background: #3a3a3a;
+  border-color: #d4a843;
+}
+
+.shop-piece.selected {
+  background: #3a4a30;
+  border-color: #6a4;
+}
+
+.shop-piece.disabled,
+.shop-piece:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.piece-symbol {
+  font-size: 1.2rem;
+}
+
+.piece-label {
+  flex: 1;
+}
+
+.piece-price {
+  color: #d4a843;
+  font-weight: bold;
+}
+
+.placement-hint {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #6a4;
+  font-style: italic;
+}
+
+/* Action history */
+
+.action-history {
+  background: #252525;
+  border-radius: 6px;
+  padding: 0.75rem;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.action-history h3 {
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.history-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  overflow-y: auto;
+  font-size: 0.8rem;
+  font-family: 'SF Mono', 'Menlo', monospace;
+  color: #aaa;
+}
+
+.history-empty {
+  font-size: 0.8rem;
+  color: #666;
+  font-style: italic;
+}
+
+/* Game over */
+
+.game-over-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.game-over-dialog {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 10px;
+  padding: 2rem 3rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.game-over-dialog h2 {
+  color: #d4a843;
+  font-size: 1.5rem;
+}
+
+.game-over-result {
+  font-size: 1.1rem;
+}
+
+.new-game-button {
+  padding: 0.6rem 1.5rem;
+  background: #d4a843;
+  color: #1a1a1a;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.new-game-button:hover {
+  background: #e0b854;
+}
+
+/* Error */
 
 .error-message {
   color: #e74c3c;

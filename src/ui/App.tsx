@@ -1,30 +1,30 @@
-import { GameProvider, useGameContext } from './context/GameContext.tsx';
+import { GameProvider } from './context/GameContext.tsx';
 import { Board } from './components/Board.tsx';
+import { Shop } from './components/Shop.tsx';
+import { GoldDisplay } from './components/GoldDisplay.tsx';
+import { TurnIndicator } from './components/TurnIndicator.tsx';
+import { ActionHistory } from './components/ActionHistory.tsx';
+import { GameOverDialog } from './components/GameOverDialog.tsx';
 import '../styles/main.css';
 
 function GameView() {
-  const { state, dispatch, error } = useGameContext();
-
   return (
     <div className="game-layout">
-      <h1>Chess Gold</h1>
-      <div className="game-info">
-        <span className={state.turn === 'white' ? 'active-turn' : ''}>
-          White: {state.gold.white}g
-        </span>
-        <span className="turn-indicator">
-          {state.status === 'checkmate'
-            ? `Checkmate! ${state.winner} wins!`
-            : state.status === 'stalemate'
-              ? 'Stalemate - Draw'
-              : `${state.turn === 'white' ? 'White' : 'Black'} to move`}
-        </span>
-        <span className={state.turn === 'black' ? 'active-turn' : ''}>
-          Black: {state.gold.black}g
-        </span>
+      <header className="game-header">
+        <h1>Chess Gold</h1>
+        <TurnIndicator />
+      </header>
+      <div className="game-content">
+        <div className="board-panel">
+          <Board />
+        </div>
+        <div className="side-panel">
+          <GoldDisplay />
+          <Shop />
+          <ActionHistory />
+        </div>
       </div>
-      <Board state={state} dispatch={dispatch} />
-      {error && <div className="error-message">{error.message}</div>}
+      <GameOverDialog />
     </div>
   );
 }
