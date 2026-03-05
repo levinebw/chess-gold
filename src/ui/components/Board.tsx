@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Chessground } from 'chessground';
 import type { Api } from 'chessground/api';
 import type { Key } from 'chessground/types';
-import type { Square } from '../../engine/types.ts';
+import type { Square, PurchasableRole } from '../../engine/types.ts';
 import { useGameContext } from '../context/GameContext.tsx';
 
 const FILES = 'abcdefgh';
@@ -32,6 +32,14 @@ export function Board() {
   const boardRef = useRef<HTMLDivElement>(null);
   const cgRef = useRef<Api | null>(null);
 
+  // Refs for Chessground event callbacks to access current React state
+  const placingPieceRef = useRef<PurchasableRole | null>(placingPiece);
+  const placementSquaresRef = useRef<Square[]>(placementSquares);
+  useEffect(() => {
+    placingPieceRef.current = placingPiece;
+    placementSquaresRef.current = placementSquares;
+  }, [placingPiece, placementSquares]);
+
   // Create Chessground instance once
   useEffect(() => {
     if (!boardRef.current) return;
@@ -51,6 +59,19 @@ export function Board() {
             to: keyToSquare(dest),
           });
         },
+        select: (key: Key) => {
+          if (placingPieceRef.current) {
+            const sq = keyToSquare(key);
+            if (placementSquaresRef.current.includes(sq)) {
+              dispatch({
+                type: 'place',
+                piece: placingPieceRef.current,
+                square: sq,
+                fromInventory: false,
+              });
+            }
+          }
+        },
       },
     });
     cgRef.current = cg;
@@ -63,17 +84,18 @@ export function Board() {
     if (!cgRef.current) return;
 
     const isGameOver = state.status === 'checkmate' || state.status === 'stalemate';
+    const inPlacementMode = !!placingPiece;
 
     cgRef.current.set({
       fen: state.fen,
       turnColor: state.turn,
       movable: {
         free: false,
-        color: isGameOver ? undefined : state.turn,
-        dests: isGameOver ? new Map() : legalDestsToChessground(legalDests),
+        color: inPlacementMode || isGameOver ? undefined : state.turn,
+        dests: inPlacementMode || isGameOver ? new Map() : legalDestsToChessground(legalDests),
       },
     });
-  }, [state, legalDests]);
+  }, [state, legalDests, placingPiece]);
 
   // Highlight placement squares
   useEffect(() => {
@@ -88,30 +110,6 @@ export function Board() {
       cgRef.current.setAutoShapes([]);
     }
   }, [placingPiece, placementSquares]);
-
-  // Handle placement clicks
-  const handleBoardClick = (e: React.MouseEvent) => {
-    if (!placingPiece || !cgRef.current) return;
-
-    const boardEl = boardRef.current;
-    if (!boardEl) return;
-
-    const rect = boardEl.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const fileIndex = Math.floor((x / rect.width) * 8);
-    const rankIndex = 7 - Math.floor((y / rect.height) * 8);
-    const square = (rankIndex * 8 + fileIndex) as Square;
-
-    if (placementSquares.includes(square)) {
-      dispatch({
-        type: 'place',
-        piece: placingPiece,
-        square,
-        fromInventory: false,
-      });
-    }
-  };
 
   // Cancel placement on Escape
   useEffect(() => {
@@ -128,7 +126,6 @@ export function Board() {
     <div
       ref={boardRef}
       className={`board-container ${placingPiece ? 'placement-mode' : ''}`}
-      onClick={handleBoardClick}
     />
   );
 }
