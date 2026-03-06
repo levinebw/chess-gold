@@ -7,15 +7,16 @@ import { getLegalMoves, isInCheck, isCheckmate, isStalemate, applyMove } from '.
 
 const KINGS_ONLY_FEN = '4k3/8/8/8/8/8/8/4K3 w - - 0 1';
 
-export function createInitialState(modeConfig?: GameModeConfig): GameState {
+export function createInitialState(modeConfig?: GameModeConfig, startingGold?: number): GameState {
+  const gold = startingGold ?? CHESS_GOLD_CONFIG.startingGold;
   return {
     fen: KINGS_ONLY_FEN,
     turn: 'white',
     turnNumber: 1,
     halfMoveCount: 0,
     gold: {
-      white: CHESS_GOLD_CONFIG.startingGold,
-      black: CHESS_GOLD_CONFIG.startingGold,
+      white: gold,
+      black: gold,
     },
     inventory: { white: [], black: [] },
     items: { white: [], black: [] },

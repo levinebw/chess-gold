@@ -6,7 +6,8 @@ import { getValidPlacementSquares } from '../../engine/placement.ts';
 import { CHESS_GOLD_CONFIG } from '../../engine/config.ts';
 
 export function useGame(modeConfig?: GameModeConfig) {
-  const [state, setState] = useState<GameState>(() => createInitialState(modeConfig));
+  const [startingGold, setStartingGold] = useState(CHESS_GOLD_CONFIG.startingGold);
+  const [state, setState] = useState<GameState>(() => createInitialState(modeConfig, startingGold));
   const [stateHistory, setStateHistory] = useState<GameState[]>([]);
   const [error, setError] = useState<GameError | null>(null);
   const [placingPiece, setPlacingPiece] = useState<PurchasableRole | null>(null);
@@ -39,11 +40,11 @@ export function useGame(modeConfig?: GameModeConfig) {
   const canUndo = stateHistory.length > 0;
 
   const resetGame = useCallback(() => {
-    setState(createInitialState(modeConfig));
+    setState(createInitialState(modeConfig, startingGold));
     setStateHistory([]);
     setError(null);
     setPlacingPiece(null);
-  }, [modeConfig]);
+  }, [modeConfig, startingGold]);
 
   // Compute legal move destinations for Chessground
   const legalDests = useMemo(() => getLegalMoves(state), [state]);
@@ -87,5 +88,7 @@ export function useGame(modeConfig?: GameModeConfig) {
     cancelPlacement,
     canAfford,
     config: CHESS_GOLD_CONFIG,
+    startingGold,
+    setStartingGold,
   };
 }
