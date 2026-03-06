@@ -86,10 +86,10 @@ describe('Edge Cases', () => {
   // --- Promotion edge cases ---
 
   describe('promotion edge cases', () => {
-    it('pawn on last rank with exactly 1 gold can promote', () => {
+    it('pawn on last rank with exactly promotion cost gold can promote', () => {
       const state = createGameState({
         fen: '4Pk2/8/8/8/8/8/8/4K3 w - - 0 1',
-        gold: { white: 1, black: 3 },
+        gold: { white: CHESS_GOLD_CONFIG.promotionCost, black: 3 },
       });
       expect(canPromote(state, sq('e8'))).toBe(true);
       const result = applyPromotion(state, sq('e8'), 'queen');

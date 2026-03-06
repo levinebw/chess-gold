@@ -72,13 +72,13 @@ describe('Pawn Promotion', () => {
     });
 
     it('reads promotion cost from config', () => {
-      expect(CHESS_GOLD_CONFIG.promotionCost).toBe(1);
+      expect(CHESS_GOLD_CONFIG.promotionCost).toBe(3);
     });
 
-    it('allows promotion when gold is exactly 1', () => {
+    it('allows promotion when gold is exactly the promotion cost', () => {
       const state = createGameState({
         fen: '4Pk2/8/8/8/8/8/8/4K3 w - - 0 1',
-        gold: { white: 1, black: 3 },
+        gold: { white: CHESS_GOLD_CONFIG.promotionCost, black: 3 },
       });
 
       expect(canPromote(state, sq('e8'))).toBe(true);

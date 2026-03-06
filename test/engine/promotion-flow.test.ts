@@ -38,10 +38,11 @@ describe('Promotion via applyAction', () => {
     });
 
     it('allows promotion when gold after income exactly equals promotion cost', () => {
-      // White has 0g, gets +1 income = 1g, promotion costs 1g → 0g remaining
+      // White needs exactly promotionCost after income
+      const startGold = CHESS_GOLD_CONFIG.promotionCost - CHESS_GOLD_CONFIG.goldPerTurn;
       const state = createGameState({
         fen: PROMO_FEN_WHITE,
-        gold: { white: 0, black: 3 },
+        gold: { white: startGold, black: 3 },
       });
 
       const result = applyAction(state, {
@@ -60,6 +61,7 @@ describe('Promotion via applyAction', () => {
       // Pawn can advance to e1 (promotion).
       const state = createGameState({
         fen: '4k3/8/8/8/8/8/4p3/K7 b - - 0 1',
+        turn: 'black',
         gold: { white: 3, black: 5 },
       });
 
@@ -132,8 +134,8 @@ describe('Promotion via applyAction', () => {
 
   describe('config usage', () => {
     it('uses CHESS_GOLD_CONFIG.promotionCost (not a hardcoded value)', () => {
-      // Verify the config value is what we expect (1g)
-      expect(CHESS_GOLD_CONFIG.promotionCost).toBe(1);
+      // Verify the config value is what we expect (3g)
+      expect(CHESS_GOLD_CONFIG.promotionCost).toBe(3);
 
       // The gold deduction should match the config value exactly
       const state = createGameState({

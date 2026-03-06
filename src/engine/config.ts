@@ -3,7 +3,7 @@ import type { GameConfig, GameModeConfig } from './types.ts';
 export const CHESS_GOLD_CONFIG: GameConfig = {
   startingGold: 3,
   goldPerTurn: 1,
-  promotionCost: 1,
+  promotionCost: 3,
 
   piecePrices: {
     pawn: 1,

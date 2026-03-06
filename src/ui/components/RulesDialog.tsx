@@ -31,7 +31,7 @@ export function RulesDialog({ onClose }: Props) {
 
           <section>
             <h3>Captures &amp; Promotion</h3>
-            <p>Capturing earns gold (half the piece's price). Promoting a pawn costs 1 gold.</p>
+            <p>Capturing earns gold (half the piece's price). Promoting a pawn costs 3 gold.</p>
           </section>
 
           <section>
