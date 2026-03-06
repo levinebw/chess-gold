@@ -13,7 +13,7 @@ interface Props {
   onCancel: () => void;
 }
 
-export function PromotionDialog({ color, onSelect, onCancel }: Props) {
+export function PromotionDialog({ color: _color, onSelect, onCancel }: Props) {
   return (
     <div className="promotion-overlay" onClick={onCancel}>
       <div className="promotion-dialog" onClick={e => e.stopPropagation()}>

@@ -2,6 +2,10 @@
 
 A strategic twist on chess where both players start with only a king and must spend gold to recruit pieces onto the board, earning gold back by capturing the opponent's army.
 
+## Play
+
+[Play Chess Gold](https://levinebw.github.io/chess-gold/) (alpha)
+
 ## Game Concept
 
 In Chess Gold, the familiar mechanics of chess meet an economic metagame:
@@ -46,7 +50,7 @@ Modes can be combined via a feature flag system for custom rule sets.
 
 ## Project Status
 
-**Pre-development** — Architecture and game design are defined. Implementation has not started.
+**Phase 1 (MVP)** — Local 2-player Chess Gold is playable in browser. Deployed to GitHub Pages.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full system architecture, data model, and phase plan.
 
