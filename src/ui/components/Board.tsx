@@ -112,13 +112,17 @@ export function Board() {
 
   // Play sounds on state changes
   const prevActionCount = useRef(state.actionHistory.length);
+  const prevFenRef = useRef(state.fen);
   useEffect(() => {
     const currentCount = state.actionHistory.length;
+    const prevFen = prevFenRef.current;
     if (currentCount <= prevActionCount.current) {
       prevActionCount.current = currentCount;
+      prevFenRef.current = state.fen;
       return;
     }
     prevActionCount.current = currentCount;
+    prevFenRef.current = state.fen;
 
     if (state.status === 'checkmate' || state.status === 'stalemate') {
       playSound('gameOver');
@@ -132,7 +136,10 @@ export function Board() {
       if (isInCheck(state)) {
         playSound('check');
       } else {
-        playSound('move');
+        // Detect capture by comparing piece counts
+        const prevPieces = prevFen.split(' ')[0].replace(/[^a-zA-Z]/g, '').length;
+        const newPieces = state.fen.split(' ')[0].replace(/[^a-zA-Z]/g, '').length;
+        playSound(newPieces < prevPieces ? 'capture' : 'move');
       }
     }
   }, [state]);

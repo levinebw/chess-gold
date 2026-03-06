@@ -29,11 +29,11 @@ export function GoldDisplay() {
     <div className="gold-display">
       <div className={`gold-player ${state.turn === 'white' ? 'active' : ''}`}>
         <span className="gold-label">White</span>
-        <span className={`gold-amount ${whiteChanged ? 'gold-changed' : ''}`}>{state.gold.white}g</span>
+        <span className={`gold-amount ${whiteChanged ? 'gold-changed' : ''}`}>{state.gold.white}🪙</span>
       </div>
       <div className={`gold-player ${state.turn === 'black' ? 'active' : ''}`}>
         <span className="gold-label">Black</span>
-        <span className={`gold-amount ${blackChanged ? 'gold-changed' : ''}`}>{state.gold.black}g</span>
+        <span className={`gold-amount ${blackChanged ? 'gold-changed' : ''}`}>{state.gold.black}🪙</span>
       </div>
     </div>
   );

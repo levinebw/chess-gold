@@ -32,7 +32,7 @@ export function Shop() {
             >
               <span className="piece-symbol">{symbol}</span>
               <span className="piece-label">{label}</span>
-              <span className="piece-price">{price}g</span>
+              <span className="piece-price">{price}🪙</span>
             </button>
           );
         })}

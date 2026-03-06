@@ -45,8 +45,8 @@ function GameView() {
         <div className="side-panel">
           <GoldDisplay />
           <Shop />
-          <ActionHistory />
         </div>
+        <ActionHistory />
       </div>
       <GameOverDialog />
       {showRules && <RulesDialog onClose={() => setShowRules(false)} />}

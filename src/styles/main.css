@@ -27,7 +27,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  max-width: 800px;
+  max-width: 1100px;
   width: 100%;
 }
 
@@ -112,7 +112,7 @@ body {
 
 .board-wrapper {
   position: relative;
-  width: min(480px, calc(100vw - 3rem));
+  width: min(640px, calc(100vh - 10rem), calc(100vw - 3rem));
   aspect-ratio: 1;
   flex-shrink: 0;
 }
@@ -133,7 +133,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  width: 220px;
+  width: 200px;
   flex-shrink: 0;
 }
 
@@ -279,8 +279,9 @@ body {
   background: #252525;
   border-radius: 6px;
   padding: 0.75rem;
-  flex: 1;
-  min-height: 0;
+  width: 180px;
+  flex-shrink: 0;
+  max-height: min(640px, calc(100vh - 10rem));
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -296,12 +297,31 @@ body {
 
 .history-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem 0.75rem;
+  flex-direction: column;
+  gap: 0.15rem;
   overflow-y: auto;
+  flex: 1;
+  min-height: 0;
   font-size: 0.8rem;
   font-family: 'SF Mono', 'Menlo', monospace;
   color: #aaa;
+}
+
+.history-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.history-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 3px;
+}
+
+.history-list::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .history-empty {
@@ -497,7 +517,7 @@ body {
 
 /* Responsive */
 
-@media (max-width: 740px) {
+@media (max-width: 900px) {
   #root {
     padding: 1rem;
   }
@@ -511,8 +531,17 @@ body {
     gap: 1rem;
   }
 
+  .board-wrapper {
+    width: min(480px, calc(100vw - 2rem));
+  }
+
   .side-panel {
     width: 100%;
+  }
+
+  .action-history {
+    width: 100%;
+    max-height: 200px;
   }
 
   .turn-indicator {
