@@ -45,14 +45,32 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
 
   // 3. Validate and apply action
   if (action.type === 'move') {
+    // If this move includes a promotion, verify player can afford it
+    if (action.promotion) {
+      if (current.gold[actingPlayer] < CHESS_GOLD_CONFIG.promotionCost) {
+        return makeError('INSUFFICIENT_GOLD', 'Not enough gold to promote');
+      }
+    }
+
     const legalMoves = getLegalMoves(current);
     const destsFromSquare = legalMoves.get(action.from);
     if (!destsFromSquare || !destsFromSquare.includes(action.to)) {
       return makeError('ILLEGAL_MOVE', 'Illegal move');
     }
 
-    // applyMove handles capture gold and turn flip
+    // applyMove handles capture gold, turn flip, and promotion (via chessops play)
     current = applyMove(current, action.from, action.to, action.promotion);
+
+    // Deduct promotion cost
+    if (action.promotion) {
+      current = {
+        ...current,
+        gold: {
+          ...current.gold,
+          [actingPlayer]: current.gold[actingPlayer] - CHESS_GOLD_CONFIG.promotionCost,
+        },
+      };
+    }
 
   } else if (action.type === 'place') {
     if (!canAffordPiece(current, action.piece)) {
