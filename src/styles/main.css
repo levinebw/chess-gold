@@ -69,6 +69,38 @@ body {
   cursor: not-allowed;
 }
 
+.mute-button {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.2rem;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.mute-button:hover {
+  opacity: 1;
+}
+
+.rules-button {
+  width: 28px;
+  height: 28px;
+  background: #333;
+  border: 1px solid #444;
+  border-radius: 50%;
+  color: #e0e0e0;
+  font-size: 0.85rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.rules-button:hover {
+  background: #3a3a3a;
+  border-color: #d4a843;
+}
+
 .game-content {
   display: flex;
   gap: 1.5rem;
@@ -117,6 +149,7 @@ body {
 .turn-status {
   font-weight: bold;
   font-size: 0.95rem;
+  transition: color 0.2s;
 }
 
 .turn-number {
@@ -155,6 +188,16 @@ body {
 .gold-amount {
   font-size: 1.3rem;
   font-weight: bold;
+  transition: color 0.2s;
+}
+
+.gold-amount.gold-changed {
+  animation: gold-pulse 0.3s ease-out;
+}
+
+@keyframes gold-pulse {
+  0% { color: #fff; transform: scale(1.15); }
+  100% { color: inherit; transform: scale(1); }
 }
 
 /* Shop */
@@ -368,6 +411,88 @@ body {
 
 .promotion-symbol {
   font-size: 2rem;
+}
+
+/* Rules dialog */
+
+.rules-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.rules-dialog {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 10px;
+  padding: 1.5rem 2rem;
+  max-width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rules-dialog h2 {
+  color: #d4a843;
+  font-size: 1.2rem;
+  margin-bottom: 0.25rem;
+}
+
+.rules-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.rules-content h3 {
+  font-size: 0.85rem;
+  color: #d4a843;
+  margin-bottom: 0.15rem;
+}
+
+.rules-content p {
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #ccc;
+}
+
+.rules-price-table {
+  width: 100%;
+  font-size: 0.82rem;
+  color: #ccc;
+}
+
+.rules-price-table td {
+  padding: 0.15rem 0.5rem;
+}
+
+.rules-price-table td:last-child {
+  color: #d4a843;
+  font-weight: bold;
+  text-align: right;
+}
+
+.rules-close-button {
+  padding: 0.5rem 1.5rem;
+  background: #d4a843;
+  color: #1a1a1a;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  align-self: center;
+  transition: background 0.15s;
+}
+
+.rules-close-button:hover {
+  background: #e0b854;
 }
 
 /* Responsive */

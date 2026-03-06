@@ -5,6 +5,8 @@ import type { Key } from 'chessground/types';
 import { parseFen } from 'chessops/fen';
 import type { Square, PurchasableRole } from '../../engine/types.ts';
 import { useGameContext } from '../context/GameContext.tsx';
+import { isInCheck } from '../../engine/position.ts';
+import { playSound } from '../utils/sounds.ts';
 import { PromotionDialog } from './PromotionDialog.tsx';
 
 const FILES = 'abcdefgh';
@@ -88,9 +90,18 @@ export function Board() {
     const isGameOver = state.status === 'checkmate' || state.status === 'stalemate';
     const blocked = !!placingPiece || !!pendingPromotion || isGameOver;
 
+    // Extract last move for highlighting
+    const lastAction = state.actionHistory[state.actionHistory.length - 1];
+    let lastMove: [Key, Key] | undefined;
+    if (lastAction?.type === 'move') {
+      lastMove = [squareToKey(lastAction.from), squareToKey(lastAction.to)];
+    }
+
     cgRef.current.set({
       fen: state.fen,
       turnColor: state.turn,
+      lastMove,
+      check: isInCheck(state) ? state.turn : undefined,
       movable: {
         free: false,
         color: blocked ? undefined : state.turn,
@@ -98,6 +109,33 @@ export function Board() {
       },
     });
   }, [state, legalDests, placingPiece, pendingPromotion, error]);
+
+  // Play sounds on state changes
+  const prevActionCount = useRef(state.actionHistory.length);
+  useEffect(() => {
+    const currentCount = state.actionHistory.length;
+    if (currentCount <= prevActionCount.current) {
+      prevActionCount.current = currentCount;
+      return;
+    }
+    prevActionCount.current = currentCount;
+
+    if (state.status === 'checkmate' || state.status === 'stalemate') {
+      playSound('gameOver');
+      return;
+    }
+
+    const lastAction = state.actionHistory[currentCount - 1];
+    if (lastAction?.type === 'place') {
+      playSound('place');
+    } else if (lastAction?.type === 'move') {
+      if (isInCheck(state)) {
+        playSound('check');
+      } else {
+        playSound('move');
+      }
+    }
+  }, [state]);
 
   // Highlight placement squares
   useEffect(() => {

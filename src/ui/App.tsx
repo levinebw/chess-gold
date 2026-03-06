@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { GameProvider } from './context/GameContext.tsx';
 import { Board } from './components/Board.tsx';
 import { Shop } from './components/Shop.tsx';
@@ -5,18 +6,34 @@ import { GoldDisplay } from './components/GoldDisplay.tsx';
 import { TurnIndicator } from './components/TurnIndicator.tsx';
 import { ActionHistory } from './components/ActionHistory.tsx';
 import { GameOverDialog } from './components/GameOverDialog.tsx';
+import { RulesDialog } from './components/RulesDialog.tsx';
 import { useGameContext } from './context/GameContext.tsx';
+import { isMuted, setMuted } from './utils/sounds.ts';
 import '../styles/main.css';
 
 function GameView() {
   const { undo, canUndo } = useGameContext();
+  const [showRules, setShowRules] = useState(false);
+  const [muted, setMutedState] = useState(isMuted);
+
+  const toggleMute = () => {
+    const newVal = !muted;
+    setMuted(newVal);
+    setMutedState(newVal);
+  };
   return (
     <div className="game-layout">
       <header className="game-header">
         <h1>Chess Gold</h1>
         <div className="header-actions">
-          <button onClick={undo} disabled={!canUndo} className="undo-button">
+          <button onClick={() => setShowRules(true)} className="rules-button" title="Rules">
+            ?
+          </button>
+          <button onClick={undo} disabled={!canUndo} className="undo-button" title="Undo">
             Undo
+          </button>
+          <button onClick={toggleMute} className="mute-button" title={muted ? 'Unmute' : 'Mute'}>
+            {muted ? '\uD83D\uDD07' : '\uD83D\uDD0A'}
           </button>
           <TurnIndicator />
         </div>
@@ -32,6 +49,7 @@ function GameView() {
         </div>
       </div>
       <GameOverDialog />
+      {showRules && <RulesDialog onClose={() => setShowRules(false)} />}
     </div>
   );
 }
