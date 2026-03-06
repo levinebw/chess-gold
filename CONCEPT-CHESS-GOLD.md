@@ -1,5 +1,7 @@
 # Chess GOLD
 
+# Chess GOLD
+
 **Description**
 Chess Gold - A strategic twist on chess where both players start with only a king and must spend gold to recruit pieces onto the board, earning gold back by capturing the opponent's army.
 
@@ -161,4 +163,4 @@ Menu similar to [lichess.org](http://lichess.org):
 | **v1.0** | Lobbies, Elo, rated/casual games - full online platform | 
 | **v1.1** | remaining gamemodes (3, 5) |
 
-
+Copyright 2026 Zaden and Company

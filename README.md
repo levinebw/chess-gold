@@ -78,3 +78,5 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full system architecture, data mo
 This project uses [chessops](https://github.com/niklasf/chessops) and [Chessground](https://github.com/lichess-org/chessground), both licensed under GPL-3.0. Accordingly, this project is licensed under the **GNU General Public License v3.0**.
 
 See [LICENSE](LICENSE) for details.
+
+Copyright 2026 Zaden and Company
