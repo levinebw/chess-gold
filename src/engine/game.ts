@@ -2,8 +2,8 @@ import { parseFen, makeFen } from 'chessops/fen';
 import type { GameState, GameAction, GameError, GameModeConfig } from './types.ts';
 import { CHESS_GOLD_CONFIG, MODE_PRESETS } from './config.ts';
 import { awardTurnIncome, canAffordPiece, deductPurchaseCost } from './gold.ts';
-import { isValidPlacement } from './placement.ts';
-import { getLegalMoves, isCheckmate, isStalemate, applyMove } from './position.ts';
+import { isValidPlacement, placementResolvesCheck } from './placement.ts';
+import { getLegalMoves, isInCheck, isCheckmate, isStalemate, applyMove } from './position.ts';
 
 const KINGS_ONLY_FEN = '4k3/8/8/8/8/8/8/4K3 w - - 0 1';
 
@@ -78,6 +78,9 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
     }
     if (!isValidPlacement(current, action.piece, action.square)) {
       return makeError('INVALID_PLACEMENT', 'Invalid placement square');
+    }
+    if (isInCheck(current) && !placementResolvesCheck(current, action.piece, action.square)) {
+      return makeError('INVALID_PLACEMENT', 'Placement must resolve check');
     }
 
     current = deductPurchaseCost(current, action.piece);

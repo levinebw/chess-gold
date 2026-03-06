@@ -2,6 +2,7 @@ import { Chess } from 'chessops/chess';
 import { parseFen } from 'chessops/fen';
 import type { GameState, PurchasableRole, Square } from './types.ts';
 import { CHESS_GOLD_CONFIG } from './config.ts';
+import { isInCheck } from './position.ts';
 
 function squareRow(square: Square): number {
   return Math.floor(square / 8) + 1;
@@ -59,9 +60,12 @@ export function isValidPlacement(state: GameState, piece: PurchasableRole, squar
 
 export function getValidPlacementSquares(state: GameState, piece: PurchasableRole): Square[] {
   const squares: Square[] = [];
+  const inCheck = isInCheck(state);
   for (let sq = 0; sq < 64; sq++) {
     if (isValidPlacement(state, piece, sq as Square)) {
-      squares.push(sq as Square);
+      if (!inCheck || placementResolvesCheck(state, piece, sq as Square)) {
+        squares.push(sq as Square);
+      }
     }
   }
   return squares;
