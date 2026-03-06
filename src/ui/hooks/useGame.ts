@@ -7,6 +7,7 @@ import { CHESS_GOLD_CONFIG } from '../../engine/config.ts';
 
 export function useGame(modeConfig?: GameModeConfig) {
   const [state, setState] = useState<GameState>(() => createInitialState(modeConfig));
+  const [stateHistory, setStateHistory] = useState<GameState[]>([]);
   const [error, setError] = useState<GameError | null>(null);
   const [placingPiece, setPlacingPiece] = useState<PurchasableRole | null>(null);
 
@@ -18,13 +19,28 @@ export function useGame(modeConfig?: GameModeConfig) {
         return prev;
       }
       setError(null);
+      setStateHistory(h => [...h, prev]);
       return result as GameState;
     });
     setPlacingPiece(null);
   }, []);
 
+  const undo = useCallback(() => {
+    setStateHistory(h => {
+      if (h.length === 0) return h;
+      const previous = h[h.length - 1];
+      setState(previous);
+      setError(null);
+      setPlacingPiece(null);
+      return h.slice(0, -1);
+    });
+  }, []);
+
+  const canUndo = stateHistory.length > 0;
+
   const resetGame = useCallback(() => {
     setState(createInitialState(modeConfig));
+    setStateHistory([]);
     setError(null);
     setPlacingPiece(null);
   }, [modeConfig]);
@@ -62,6 +78,8 @@ export function useGame(modeConfig?: GameModeConfig) {
     dispatch,
     error,
     resetGame,
+    undo,
+    canUndo,
     legalDests,
     placingPiece,
     placementSquares,
