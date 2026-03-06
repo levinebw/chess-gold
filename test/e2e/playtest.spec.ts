@@ -243,7 +243,7 @@ test.describe('Playtest Game 2: Build to checkmate', () => {
     const afterReset = await getTurnStatus(page);
     expect(afterReset).toContain('White to move');
     const goldAfterReset = await getGold(page);
-    expect(goldAfterReset.white).toBe('3g');
+    expect(goldAfterReset.white).toBe('3🪙');
     await logStep('Reset: New game started');
 
     console.log('\n=== GAME 2 LOG ===');

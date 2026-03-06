@@ -40,7 +40,7 @@ function GameView() {
               <option key={g} value={g}>{g}🪙</option>
             ))}
           </select>
-          <button onClick={resetGame} className="undo-button" title="New Game">
+          <button onClick={resetGame} className="new-game-header-button" title="New Game">
             New Game
           </button>
           <button onClick={() => setShowRules(true)} className="rules-button" title="Rules">
