@@ -78,9 +78,13 @@ export function placementResolvesCheck(state: GameState, piece: PurchasableRole,
   // Place the piece on the board
   setup.value.board.set(square, { role: piece, color: state.turn });
 
-  // Create a Chess position and check if the king is still in check
+  // Flip turn to simulate end of placement — chessops validates that
+  // the non-moving side's king is NOT in check, which is our king.
+  // This correctly allows placements that both block check and give check.
+  setup.value.turn = state.turn === 'white' ? 'black' : 'white';
+
   const pos = Chess.fromSetup(setup.value);
   if (pos.isErr) return false;
 
-  return !pos.value.isCheck();
+  return true;
 }
