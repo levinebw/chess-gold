@@ -38,8 +38,8 @@ test.describe('Chess Gold — E2E Smoke Tests', () => {
   test('game starts with two kings and correct gold display', async ({ page }) => {
     // Verify gold displays show "3g" for both players
     const goldAmounts = page.locator('.gold-amount');
-    await expect(goldAmounts.nth(0)).toHaveText('3g');
-    await expect(goldAmounts.nth(1)).toHaveText('3g');
+    await expect(goldAmounts.nth(0)).toHaveText('3🪙');
+    await expect(goldAmounts.nth(1)).toHaveText('3🪙');
 
     // Verify turn indicator shows White to move
     await expect(page.locator('.turn-status')).toContainText('White to move');
@@ -59,7 +59,7 @@ test.describe('Chess Gold — E2E Smoke Tests', () => {
 
     // Gold should show 4g for white (3 + 1 income, move is free)
     const goldAmounts = page.locator('.gold-amount');
-    await expect(goldAmounts.nth(0)).toHaveText('4g');
+    await expect(goldAmounts.nth(0)).toHaveText('4🪙');
   });
 
   // Known issue: placement via coordinate click fails in this test file despite
@@ -75,7 +75,7 @@ test.describe('Chess Gold — E2E Smoke Tests', () => {
     await clickSquare(page, 'a2');
     await expect(page.locator('.turn-status')).toContainText('Black');
     const goldAmounts = page.locator('.gold-amount');
-    await expect(goldAmounts.nth(0)).toHaveText('3g');
+    await expect(goldAmounts.nth(0)).toHaveText('3🪙');
   });
 
   test('gold increases with turn income after moves', async ({ page }) => {
@@ -84,12 +84,12 @@ test.describe('Chess Gold — E2E Smoke Tests', () => {
     await expect(page.locator('.turn-status')).toContainText('Black');
 
     const goldAmounts = page.locator('.gold-amount');
-    await expect(goldAmounts.nth(0)).toHaveText('4g');
+    await expect(goldAmounts.nth(0)).toHaveText('4🪙');
 
     // Move black king e8-d8 (turn 1: 3 + 1 income = 4g)
     await movepiece(page, 'e8', 'd8');
     await expect(page.locator('.turn-status')).toContainText('White');
-    await expect(goldAmounts.nth(1)).toHaveText('4g');
+    await expect(goldAmounts.nth(1)).toHaveText('4🪙');
   });
 
   test('shop buttons are disabled when player cannot afford', async ({ page }) => {
@@ -119,6 +119,6 @@ test.describe('Chess Gold — E2E Smoke Tests', () => {
     // The new game button appears in the game-over dialog.
     // Verify gold changed from start (proving state is not initial)
     const goldAmounts = page.locator('.gold-amount');
-    await expect(goldAmounts.nth(0)).toHaveText('4g'); // White got income
+    await expect(goldAmounts.nth(0)).toHaveText('4🪙'); // White got income
   });
 });

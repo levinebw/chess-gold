@@ -127,7 +127,7 @@ test.describe('Phase 2 Regression — Game 2: Rules Screen & Sounds', () => {
     await expect(dialog).toContainText('Goal');
     await expect(dialog).toContainText('Checkmate');
     await expect(dialog).toContainText('Starting Position');
-    await expect(dialog).toContainText('king and 3 gold');
+    await expect(dialog).toContainText('king and 3');
     await expect(dialog).toContainText('On Your Turn');
     await expect(dialog).toContainText('Placement');
     await expect(dialog).toContainText('Captures');
@@ -137,9 +137,9 @@ test.describe('Phase 2 Regression — Game 2: Rules Screen & Sounds', () => {
     // Check price table
     await expect(dialog.locator('.rules-price-table')).toBeVisible();
     await expect(dialog).toContainText('Pawn');
-    await expect(dialog).toContainText('1g');
+    await expect(dialog).toContainText('1🪙');
     await expect(dialog).toContainText('Queen');
-    await expect(dialog).toContainText('8g');
+    await expect(dialog).toContainText('8🪙');
 
     // Take screenshot
     await page.screenshot({ path: 'test/reports/screenshots/phase2-rules-dialog.png' });
@@ -204,8 +204,8 @@ test.describe('Phase 2 Regression — Phase 1 Functionality', () => {
 
   test('initial state is correct', async ({ page }) => {
     const goldAmounts = page.locator('.gold-amount');
-    await expect(goldAmounts.nth(0)).toHaveText('3g');
-    await expect(goldAmounts.nth(1)).toHaveText('3g');
+    await expect(goldAmounts.nth(0)).toHaveText('3🪙');
+    await expect(goldAmounts.nth(1)).toHaveText('3🪙');
     await expect(page.locator('.turn-status')).toContainText('White to move');
   });
 
@@ -224,12 +224,12 @@ test.describe('Phase 2 Regression — Phase 1 Functionality', () => {
     await movePiece(page, 'e1', 'd1');
     await expect(page.locator('.turn-status')).toContainText('Black');
     const goldAmounts = page.locator('.gold-amount');
-    await expect(goldAmounts.nth(0)).toHaveText('4g');
+    await expect(goldAmounts.nth(0)).toHaveText('4🪙');
 
     // B1: Ke8-d8
     await movePiece(page, 'e8', 'd8');
     await expect(page.locator('.turn-status')).toContainText('White');
-    await expect(goldAmounts.nth(1)).toHaveText('4g');
+    await expect(goldAmounts.nth(1)).toHaveText('4🪙');
   });
 
   test('escape cancels placement mode', async ({ page }) => {
