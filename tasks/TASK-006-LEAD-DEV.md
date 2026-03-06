@@ -109,12 +109,14 @@ Wrap Chessground as a React component following the pattern in AGENT-LEAD-DEVELO
 
 ### Done When
 
-- [ ] `npm run dev` starts the app and renders a chess board
-- [ ] Board shows kings-only starting position
-- [ ] Pieces can be moved by clicking/dragging
-- [ ] Only legal moves are allowed
-- [ ] Turn alternates after each move
-- [ ] Gold display shows current gold for both players (plain text is fine)
-- [ ] Turn indicator shows whose turn it is
-- [ ] `npx vitest run` — all engine tests still pass
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] `npm run dev` starts the app and renders a chess board
+- [x] Board shows kings-only starting position
+- [x] Pieces can be moved by clicking/dragging
+- [x] Only legal moves are allowed
+- [x] Turn alternates after each move
+- [x] Gold display shows current gold for both players (plain text is fine)
+- [x] Turn indicator shows whose turn it is
+- [x] `npx vitest run` — all engine tests still pass
+- [x] Commit and push

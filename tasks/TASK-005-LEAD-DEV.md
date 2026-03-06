@@ -93,10 +93,12 @@ Study these carefully — they define the contract:
 
 ### Done When
 
-- [ ] `npx vitest run` — all 100 tests pass (72 existing + 28 game tests)
-- [ ] `game.ts` exports `createInitialState` and `applyAction`
-- [ ] Full 19-action integration test plays to checkmate successfully
-- [ ] Gold income, capture rewards, and placement costs are all correct
-- [ ] Game-over detection works for both checkmate and stalemate
-- [ ] All functions are pure
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] `npx vitest run` — all 100 tests pass (72 existing + 28 game tests)
+- [x] `game.ts` exports `createInitialState` and `applyAction`
+- [x] Full 19-action integration test plays to checkmate successfully
+- [x] Gold income, capture rewards, and placement costs are all correct
+- [x] Game-over detection works for both checkmate and stalemate
+- [x] All functions are pure
+- [x] Commit and push

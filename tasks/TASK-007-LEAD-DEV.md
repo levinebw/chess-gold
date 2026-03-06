@@ -101,18 +101,20 @@ Update the App component to render all components in the layout from ARCHITECTUR
 
 ### Done When
 
-- [ ] A full game of Chess Gold can be played from start to checkmate
-- [ ] Shop shows all pieces with correct prices
-- [ ] Pieces can be purchased and placed on valid squares
-- [ ] Placement on invalid squares is rejected
-- [ ] Insufficient gold prevents purchase (pieces show as disabled)
-- [ ] Gold display updates correctly throughout the game
-- [ ] Turn indicator is accurate
-- [ ] Action history shows moves and placements
-- [ ] Game over dialog appears on checkmate/stalemate with correct result
-- [ ] "New Game" button works
-- [ ] `npx vitest run` — all tests still pass
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] A full game of Chess Gold can be played from start to checkmate
+- [x] Shop shows all pieces with correct prices
+- [x] Pieces can be purchased and placed on valid squares
+- [x] Placement on invalid squares is rejected
+- [x] Insufficient gold prevents purchase (pieces show as disabled)
+- [x] Gold display updates correctly throughout the game
+- [x] Turn indicator is accurate
+- [x] Action history shows moves and placements
+- [x] Game over dialog appears on checkmate/stalemate with correct result
+- [x] "New Game" button works
+- [x] `npx vitest run` — all tests still pass
+- [x] Commit and push
 
 ### Notes
 

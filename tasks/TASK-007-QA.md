@@ -119,12 +119,14 @@ For any issues found during E2E tests or manual playtest, file bug reports follo
 
 ### Done When
 
-- [ ] E2E smoke tests implemented (6+ tests)
-- [ ] `npx playwright test` runs and passes (or failures are documented as bugs)
-- [ ] 3 complete games playtested manually
-- [ ] Playtest report written in `test/reports/mvp-playtest.md`
-- [ ] All bugs filed as bug reports
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] E2E smoke tests implemented (6+ tests)
+- [x] `npx playwright test` runs and passes (or failures are documented as bugs)
+- [x] 3 complete games playtested manually
+- [x] Playtest report written in `test/reports/mvp-playtest.md`
+- [x] All bugs filed as bug reports
+- [x] Commit and push
 
 ### Notes
 

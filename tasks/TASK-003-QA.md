@@ -117,14 +117,16 @@ Use realistic FEN positions. Examples:
 
 ### Done When
 
-- [ ] `test/engine/promotion.test.ts` contains 10+ tests covering all promotion rules
-- [ ] `test/engine/position.test.ts` contains 10+ tests covering moves, check, checkmate, stalemate, en passant
-- [ ] Tests import from the correct source modules with clear function signatures
-- [ ] FEN positions are valid and represent the intended board states
-- [ ] `npx vitest run` discovers all new tests
-- [ ] All new tests fail (RED phase)
-- [ ] No import or syntax errors
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] `test/engine/promotion.test.ts` contains 10+ tests covering all promotion rules
+- [x] `test/engine/position.test.ts` contains 10+ tests covering moves, check, checkmate, stalemate, en passant
+- [x] Tests import from the correct source modules with clear function signatures
+- [x] FEN positions are valid and represent the intended board states
+- [x] `npx vitest run` discovers all new tests
+- [x] All new tests fail (RED phase)
+- [x] No import or syntax errors
+- [x] Commit and push
 
 ### Notes
 

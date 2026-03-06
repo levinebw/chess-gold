@@ -125,12 +125,14 @@ After fixing, manually verify each scenario:
 
 ### Done When
 
-- [ ] Placement mode: clicking a shop piece highlights correct squares (16 for pawn at start)
-- [ ] Kings remain visible at all times during placement mode
-- [ ] Clicking a valid highlighted square places the piece
-- [ ] Gold deducted, turn passes after placement
-- [ ] Normal moves work when not in placement mode
-- [ ] Escape/re-click cancels placement
-- [ ] Full game can be played with mixed moves and placements
-- [ ] `npx vitest run` — all tests still pass
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] Placement mode: clicking a shop piece highlights correct squares (16 for pawn at start)
+- [x] Kings remain visible at all times during placement mode
+- [x] Clicking a valid highlighted square places the piece
+- [x] Gold deducted, turn passes after placement
+- [x] Normal moves work when not in placement mode
+- [x] Escape/re-click cancels placement
+- [x] Full game can be played with mixed moves and placements
+- [x] `npx vitest run` — all tests still pass
+- [x] Commit and push

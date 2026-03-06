@@ -96,13 +96,15 @@ This validates that the tests are correctly written and will pass once the imple
 
 ### Done When
 
-- [ ] `test/helpers/gameState.ts` exports `createGameState()` with sensible defaults
-- [ ] `test/helpers/assertions.ts` exports helper assertion functions
-- [ ] `test/engine/gold.test.ts` contains 15+ tests covering all gold economy rules
-- [ ] `npx vitest run` discovers and runs all tests
-- [ ] All tests fail with clear assertion messages (RED phase complete)
-- [ ] No import errors or syntax errors — tests are structurally correct
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] `test/helpers/gameState.ts` exports `createGameState()` with sensible defaults
+- [x] `test/helpers/assertions.ts` exports helper assertion functions
+- [x] `test/engine/gold.test.ts` contains 15+ tests covering all gold economy rules
+- [x] `npx vitest run` discovers and runs all tests
+- [x] All tests fail with clear assertion messages (RED phase complete)
+- [x] No import errors or syntax errors — tests are structurally correct
+- [x] Commit and push
 
 ### Notes
 

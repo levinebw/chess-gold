@@ -89,8 +89,10 @@ The engine tests verify logic. The playtest verifies that a human can actually p
 
 ### Done When
 
-- [ ] 3 games played manually in Chrome browser
-- [ ] Detailed playtest report with actual steps taken
-- [ ] All bugs filed with reproduction steps
-- [ ] Report written to `test/reports/mvp-playtest-v2.md`
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] 3 games played manually in Chrome browser
+- [x] Detailed playtest report with actual steps taken
+- [x] All bugs filed with reproduction steps
+- [x] Report written to `test/reports/mvp-playtest-v2.md`
+- [x] Commit and push

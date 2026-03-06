@@ -94,14 +94,16 @@ No logic — just constants and presets. Everything the engine needs to look up 
 
 ### Done When
 
-- [ ] `npm run dev` starts a Vite dev server with the default React template
-- [ ] `npm run build` produces a production build without errors
-- [ ] `npx vitest run` executes (passes with 0 tests — no failures)
-- [ ] `src/engine/types.ts` exports all types listed above, compiles without errors
-- [ ] `src/engine/config.ts` exports `CHESS_GOLD_CONFIG` and `MODE_PRESETS`, compiles without errors
-- [ ] All empty engine module placeholders exist at the correct paths
-- [ ] Test directory structure exists
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] `npm run dev` starts a Vite dev server with the default React template
+- [x] `npm run build` produces a production build without errors
+- [x] `npx vitest run` executes (passes with 0 tests — no failures)
+- [x] `src/engine/types.ts` exports all types listed above, compiles without errors
+- [x] `src/engine/config.ts` exports `CHESS_GOLD_CONFIG` and `MODE_PRESETS`, compiles without errors
+- [x] All empty engine module placeholders exist at the correct paths
+- [x] Test directory structure exists
+- [x] Commit and push
 
 ### Notes
 

@@ -70,10 +70,12 @@ Export these two functions (signatures defined by test imports):
 
 ### Done When
 
-- [ ] `npx vitest run` — all 72 tests pass (47 existing + 25 new)
-- [ ] `position.ts` exports exactly the five functions listed above
-- [ ] `promotion.ts` exports exactly the two functions listed above
-- [ ] En passant captures award 0.5 gold
-- [ ] Promotion rejects king and pawn as targets
-- [ ] All functions are pure
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] `npx vitest run` — all 72 tests pass (47 existing + 25 new)
+- [x] `position.ts` exports exactly the five functions listed above
+- [x] `promotion.ts` exports exactly the two functions listed above
+- [x] En passant captures award 0.5 gold
+- [x] Promotion rejects king and pawn as targets
+- [x] All functions are pure
+- [x] Commit and push

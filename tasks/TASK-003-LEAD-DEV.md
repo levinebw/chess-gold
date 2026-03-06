@@ -56,9 +56,11 @@ Use composition (ADR-002): create a temporary chessops instance for validation, 
 
 ### Done When
 
-- [ ] `npx vitest run` — all 46 tests pass (21 gold + 25 placement)
-- [ ] `placement.ts` exports exactly the three functions listed above
-- [ ] Placement zones use config values, not hardcoded row numbers
-- [ ] chessops is used for board state reading and check validation
-- [ ] All functions are pure
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] `npx vitest run` — all 46 tests pass (21 gold + 25 placement)
+- [x] `placement.ts` exports exactly the three functions listed above
+- [x] Placement zones use config values, not hardcoded row numbers
+- [x] chessops is used for board state reading and check validation
+- [x] All functions are pure
+- [x] Commit and push

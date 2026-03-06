@@ -91,13 +91,15 @@ Consider adding to `test/helpers/gameState.ts`:
 
 ### Done When
 
-- [ ] `test/engine/placement.test.ts` contains 15+ tests covering all placement rules
-- [ ] Tests import from `src/engine/placement.ts` with clear function signatures
-- [ ] Check-related tests use realistic FEN positions
-- [ ] `npx vitest run` discovers all new tests
-- [ ] All new placement tests fail (RED phase — no implementation exists)
-- [ ] No import errors or syntax errors
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] `test/engine/placement.test.ts` contains 15+ tests covering all placement rules
+- [x] Tests import from `src/engine/placement.ts` with clear function signatures
+- [x] Check-related tests use realistic FEN positions
+- [x] `npx vitest run` discovers all new tests
+- [x] All new placement tests fail (RED phase — no implementation exists)
+- [x] No import errors or syntax errors
+- [x] Commit and push
 
 ### Notes
 

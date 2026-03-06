@@ -124,13 +124,15 @@ You may want to add to `test/helpers/`:
 
 ### Done When
 
-- [ ] `test/engine/game.test.ts` contains 20+ tests covering initialization, turns, moves, placements, game-over, and integration
-- [ ] Tests import `createInitialState` and `applyAction` from `src/engine/game.ts`
-- [ ] Full game integration test has a valid, playable sequence of actions
-- [ ] `npx vitest run` discovers all new tests
-- [ ] All new game tests fail (RED phase)
-- [ ] No import or syntax errors
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] `test/engine/game.test.ts` contains 20+ tests covering initialization, turns, moves, placements, game-over, and integration
+- [x] Tests import `createInitialState` and `applyAction` from `src/engine/game.ts`
+- [x] Full game integration test has a valid, playable sequence of actions
+- [x] `npx vitest run` discovers all new tests
+- [x] All new game tests fail (RED phase)
+- [x] No import or syntax errors
+- [x] Commit and push
 
 ### Notes
 

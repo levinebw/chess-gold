@@ -146,11 +146,13 @@ Update `README.md` with a "Play Now" link:
 
 ### Done When
 
-- [ ] `npm run build` produces a working build in `dist/`
-- [ ] `npm run preview` serves the game correctly
-- [ ] GitHub Actions workflow exists and runs successfully
-- [ ] GitHub Pages is enabled (user task)
-- [ ] Game is accessible at https://levinebw.github.io/chess-gold/
-- [ ] Board renders, pieces move, shop works at the deployed URL
-- [ ] README updated with play link
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] `npm run build` produces a working build in `dist/`
+- [x] `npm run preview` serves the game correctly
+- [x] GitHub Actions workflow exists and runs successfully
+- [x] GitHub Pages is enabled (user task)
+- [x] Game is accessible at https://levinebw.github.io/chess-gold/
+- [x] Board renders, pieces move, shop works at the deployed URL
+- [x] README updated with play link
+- [x] Commit and push

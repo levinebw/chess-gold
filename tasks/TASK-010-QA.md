@@ -47,8 +47,10 @@ If E2E test infrastructure makes this too complex, skip and document why.
 
 ### Done When
 
-- [ ] Engine tests cover promotion gold deduction
-- [ ] Engine tests cover promotion rejection on insufficient gold
-- [ ] Engine tests verify correct piece in FEN for all 4 promotion choices
-- [ ] All tests pass (`npx vitest run`)
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] Engine tests cover promotion gold deduction
+- [x] Engine tests cover promotion rejection on insufficient gold
+- [x] Engine tests verify correct piece in FEN for all 4 promotion choices
+- [x] All tests pass (`npx vitest run`)
+- [x] Commit and push

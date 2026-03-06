@@ -107,13 +107,15 @@ test.describe('Chess Gold — E2E Smoke Tests', () => {
 
 ### Done When
 
-- [ ] `test/engine/edge-cases.test.ts` has 10-15 edge case tests
-- [ ] All edge case tests pass (these test existing implementation)
-- [ ] If any edge case test fails, a bug report is filed (not fixed by you)
-- [ ] Playwright is installed and configured
-- [ ] `test/e2e/game-flow.spec.ts` has stub tests matching the E2E plan
-- [ ] `npx vitest run` still passes all non-game.test.ts tests (no regressions)
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] `test/engine/edge-cases.test.ts` has 10-15 edge case tests
+- [x] All edge case tests pass (these test existing implementation)
+- [x] If any edge case test fails, a bug report is filed (not fixed by you)
+- [x] Playwright is installed and configured
+- [x] `test/e2e/game-flow.spec.ts` has stub tests matching the E2E plan
+- [x] `npx vitest run` still passes all non-game.test.ts tests (no regressions)
+- [x] Commit and push
 
 ### Notes
 

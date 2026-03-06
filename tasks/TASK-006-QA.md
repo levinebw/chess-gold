@@ -63,8 +63,10 @@ These test the React integration layer — ensuring the hook correctly wraps the
 
 ### Done When
 
-- [ ] Manual smoke test completed, bugs reported if any
-- [ ] React Testing Library installed and configured
-- [ ] `test/ui/useGame.test.ts` has 5+ tests, all passing
-- [ ] `npx vitest run` — all tests pass (engine + UI hook tests)
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] Manual smoke test completed, bugs reported if any
+- [x] React Testing Library installed and configured
+- [x] `test/ui/useGame.test.ts` has 5+ tests, all passing
+- [x] `npx vitest run` — all tests pass (engine + UI hook tests)
+- [x] Commit and push

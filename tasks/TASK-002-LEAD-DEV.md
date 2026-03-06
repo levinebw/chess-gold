@@ -47,8 +47,10 @@ Export these four functions (signatures are already defined by the test imports)
 
 ### Done When
 
-- [ ] `npx vitest run` — all 21 tests pass (18 previously failing + 3 config validation)
-- [ ] `gold.ts` exports exactly the four functions listed above
-- [ ] No hardcoded values — all costs/rewards read from config
-- [ ] All functions are pure (no mutation of input state)
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] `npx vitest run` — all 21 tests pass (18 previously failing + 3 config validation)
+- [x] `gold.ts` exports exactly the four functions listed above
+- [x] No hardcoded values — all costs/rewards read from config
+- [x] All functions are pure (no mutation of input state)
+- [x] Commit and push
