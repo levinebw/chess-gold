@@ -11,7 +11,7 @@ import { useGameContext } from './context/GameContext.tsx';
 import { isMuted, setMuted } from './utils/sounds.ts';
 import '../styles/main.css';
 
-const STARTING_GOLD_OPTIONS = [1, 3, 5, 10];
+const STARTING_GOLD_OPTIONS = [1, 3, 5, 10, 100];
 
 function GameView() {
   const { undo, canUndo, resetGame, startingGold, setStartingGold, state } = useGameContext();
