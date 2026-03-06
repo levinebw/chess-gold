@@ -54,9 +54,11 @@ Make the turn indicator more visible:
 
 ### Done When
 
-- [ ] Last move squares highlighted after each move
-- [ ] King glows red when in check
-- [ ] Gold display pulses when gold changes
-- [ ] Turn indicator clearly shows whose turn it is
-- [ ] All tests pass
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] Last move squares highlighted after each move
+- [x] King glows red when in check
+- [x] Gold display pulses when gold changes
+- [x] Turn indicator clearly shows whose turn it is
+- [x] All tests pass
+- [x] Commit and push

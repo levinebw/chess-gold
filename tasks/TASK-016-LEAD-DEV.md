@@ -93,10 +93,12 @@ Add `.undo-button` styles matching the game header aesthetic. Disabled state sho
 
 ### Done When
 
-- [ ] Undo button visible in game header
-- [ ] Clicking undo restores the previous game state
-- [ ] Multiple undos work (can undo back to game start)
-- [ ] Undo is disabled when there's nothing to undo
-- [ ] New Game resets the undo history
-- [ ] All tests pass
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] Undo button visible in game header
+- [x] Clicking undo restores the previous game state
+- [x] Multiple undos work (can undo back to game start)
+- [x] Undo is disabled when there's nothing to undo
+- [x] New Game resets the undo history
+- [x] All tests pass
+- [x] Commit and push

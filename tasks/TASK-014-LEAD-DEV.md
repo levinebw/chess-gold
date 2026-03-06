@@ -60,10 +60,12 @@ Add a mute/unmute button in the game header. Store preference in localStorage.
 
 ### Done When
 
-- [ ] Sound plays on move, capture, placement, check, game over, purchase
-- [ ] Mute toggle in header works
-- [ ] Mute preference persists in localStorage
-- [ ] Sound files are properly licensed (CC0/MIT)
-- [ ] Works on mobile (respects autoplay restrictions)
-- [ ] All tests pass
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] Sound plays on move, capture, placement, check, game over, purchase
+- [x] Mute toggle in header works
+- [x] Mute preference persists in localStorage
+- [x] Sound files are properly licensed (CC0/MIT)
+- [x] Works on mobile (respects autoplay restrictions)
+- [x] All tests pass
+- [x] Commit and push

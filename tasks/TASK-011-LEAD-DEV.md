@@ -19,6 +19,8 @@ Add `npx vitest run` to the GitHub Actions deploy workflow so broken code can't 
 
 ### Done When
 
-- [ ] Deploy workflow includes test step before build
-- [ ] Workflow passes on push to main
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] Deploy workflow includes test step before build
+- [x] Workflow passes on push to main
+- [x] Commit and push

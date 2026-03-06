@@ -42,10 +42,12 @@ A modal dialog (similar to GameOverDialog) with:
 
 ### Done When
 
-- [ ] Rules button visible in game header
-- [ ] Clicking it opens a modal with game rules
-- [ ] Rules cover all core mechanics (gold, placement, promotion, capture rewards)
-- [ ] Modal closes on button click or outside click
-- [ ] Works on mobile (scrollable)
-- [ ] `npx vitest run` — all tests pass
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] Rules button visible in game header
+- [x] Clicking it opens a modal with game rules
+- [x] Rules cover all core mechanics (gold, placement, promotion, capture rewards)
+- [x] Modal closes on button click or outside click
+- [x] Works on mobile (scrollable)
+- [x] `npx vitest run` — all tests pass
+- [x] Commit and push
