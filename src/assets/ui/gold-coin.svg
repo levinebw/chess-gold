@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="coinFace" cx="40%" cy="35%" r="55%">
+      <stop offset="0%" stop-color="#f5d96b"/>
+      <stop offset="50%" stop-color="#d4a843"/>
+      <stop offset="100%" stop-color="#b8862d"/>
+    </radialGradient>
+    <radialGradient id="coinShine" cx="35%" cy="30%" r="30%">
+      <stop offset="0%" stop-color="#fff8d6" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#fff8d6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Outer rim (darker edge) -->
+  <circle cx="32" cy="32" r="30" fill="#8a6914"/>
+  <!-- Coin body -->
+  <circle cx="32" cy="32" r="27" fill="url(#coinFace)"/>
+  <!-- Inner rim ring -->
+  <circle cx="32" cy="32" r="23" fill="none" stroke="#b8862d" stroke-width="1.5"/>
+  <!-- "G" stamp -->
+  <text x="32" y="42" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="bold" fill="#8a6914" opacity="0.7">G</text>
+  <!-- Highlight/shine overlay -->
+  <circle cx="32" cy="32" r="27" fill="url(#coinShine)"/>
+</svg>

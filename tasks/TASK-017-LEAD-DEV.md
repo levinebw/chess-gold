@@ -33,7 +33,9 @@ chess-gold/
 
 ### Done When
 
-- [ ] `src/server/` directory exists
-- [ ] Engine can be imported from server context
-- [ ] Existing frontend builds and tests still pass
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] `src/server/` directory exists
+- [x] Engine can be imported from server context
+- [x] Existing frontend builds and tests still pass
+- [x] Commit and push

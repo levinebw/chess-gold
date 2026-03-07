@@ -1,3 +1,5 @@
+import { GoldCoin } from './GoldCoin.tsx';
+
 interface Props {
   onClose: () => void;
 }
@@ -16,12 +18,12 @@ export function RulesDialog({ onClose }: Props) {
 
           <section>
             <h3>Starting Position</h3>
-            <p>Both players start with only a king and 3🪙.</p>
+            <p>Both players start with only a king and 3<GoldCoin/>.</p>
           </section>
 
           <section>
             <h3>On Your Turn</h3>
-            <p><strong>Move</strong> a piece on the board (free), OR <strong>place</strong> a new piece from the shop (costs gold). You get <strong>+1🪙</strong> at the start of each turn.</p>
+            <p><strong>Move</strong> a piece on the board (free), OR <strong>place</strong> a new piece from the shop (costs gold). You get <strong>+1<GoldCoin/></strong> at the start of each turn.</p>
           </section>
 
           <section>
@@ -31,18 +33,18 @@ export function RulesDialog({ onClose }: Props) {
 
           <section>
             <h3>Captures &amp; Promotion</h3>
-            <p>Capturing earns gold (half the piece's price). Promoting a pawn costs 3🪙.</p>
+            <p>Capturing earns gold (half the piece's price). Promoting a pawn costs 3<GoldCoin/>.</p>
           </section>
 
           <section>
             <h3>Piece Prices</h3>
             <table className="rules-price-table">
               <tbody>
-                <tr><td>Pawn</td><td>1🪙</td></tr>
-                <tr><td>Knight</td><td>3🪙</td></tr>
-                <tr><td>Bishop</td><td>3🪙</td></tr>
-                <tr><td>Rook</td><td>5🪙</td></tr>
-                <tr><td>Queen</td><td>8🪙</td></tr>
+                <tr><td>Pawn</td><td>1<GoldCoin/></td></tr>
+                <tr><td>Knight</td><td>3<GoldCoin/></td></tr>
+                <tr><td>Bishop</td><td>3<GoldCoin/></td></tr>
+                <tr><td>Rook</td><td>5<GoldCoin/></td></tr>
+                <tr><td>Queen</td><td>8<GoldCoin/></td></tr>
               </tbody>
             </table>
           </section>

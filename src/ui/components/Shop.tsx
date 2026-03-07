@@ -1,5 +1,6 @@
 import type { PurchasableRole } from '../../engine/types.ts';
 import { useGameContext } from '../context/GameContext.tsx';
+import { GoldCoin } from './GoldCoin.tsx';
 
 const PIECE_DISPLAY: { role: PurchasableRole; label: string; symbol: string }[] = [
   { role: 'pawn', label: 'Pawn', symbol: '♟' },
@@ -32,7 +33,7 @@ export function Shop() {
             >
               <span className="piece-symbol">{symbol}</span>
               <span className="piece-label">{label}</span>
-              <span className="piece-price">{price}🪙</span>
+              <span className="piece-price">{price}<GoldCoin size={14}/></span>
             </button>
           );
         })}

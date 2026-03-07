@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGameContext } from '../context/GameContext.tsx';
+import { GoldCoin } from './GoldCoin.tsx';
 
 export function GoldDisplay() {
   const { state } = useGameContext();
@@ -29,11 +30,11 @@ export function GoldDisplay() {
     <div className="gold-display">
       <div className={`gold-player ${state.turn === 'white' ? 'active' : ''}`}>
         <span className="gold-label">White</span>
-        <span className={`gold-amount ${whiteChanged ? 'gold-changed' : ''}`}>{state.gold.white}🪙</span>
+        <span className={`gold-amount ${whiteChanged ? 'gold-changed' : ''}`}>{state.gold.white}<GoldCoin size={18}/></span>
       </div>
       <div className={`gold-player ${state.turn === 'black' ? 'active' : ''}`}>
         <span className="gold-label">Black</span>
-        <span className={`gold-amount ${blackChanged ? 'gold-changed' : ''}`}>{state.gold.black}🪙</span>
+        <span className={`gold-amount ${blackChanged ? 'gold-changed' : ''}`}>{state.gold.black}<GoldCoin size={18}/></span>
       </div>
     </div>
   );

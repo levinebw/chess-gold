@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { GameProvider } from './context/GameContext.tsx';
+import { useState, useCallback } from 'react';
+import { GameProvider, OnlineGameProvider } from './context/GameContext.tsx';
 import { Board } from './components/Board.tsx';
 import { Shop } from './components/Shop.tsx';
 import { GoldDisplay } from './components/GoldDisplay.tsx';
@@ -7,13 +7,25 @@ import { TurnIndicator } from './components/TurnIndicator.tsx';
 import { ActionHistory } from './components/ActionHistory.tsx';
 import { GameOverDialog } from './components/GameOverDialog.tsx';
 import { RulesDialog } from './components/RulesDialog.tsx';
+import { Lobby } from './components/Lobby.tsx';
+import { OnlineStatusBar } from './components/OnlineGameView.tsx';
 import { useGameContext } from './context/GameContext.tsx';
+import { useOnlineGame } from './hooks/useOnlineGame.ts';
+import { GoldCoin } from './components/GoldCoin.tsx';
 import { isMuted, setMuted } from './utils/sounds.ts';
+import type { Color } from '../engine/types.ts';
+import type { Socket } from 'socket.io-client';
+import type { ClientEvents, ServerEvents } from '../server/protocol.ts';
 import '../styles/main.css';
 
 const STARTING_GOLD_OPTIONS = [1, 3, 5, 10, 100];
 
-function GameView() {
+type AppScreen =
+  | { type: 'lobby' }
+  | { type: 'local' }
+  | { type: 'online'; roomId: string; color: Color; socket: Socket<ServerEvents, ClientEvents> };
+
+function GameView({ isOnline, onLeave }: { isOnline: boolean; onLeave?: () => void }) {
   const { undo, canUndo, resetGame, startingGold, setStartingGold, state, flipBoard } = useGameContext();
   const [showRules, setShowRules] = useState(false);
   const [muted, setMutedState] = useState(isMuted);
@@ -24,31 +36,40 @@ function GameView() {
     setMuted(newVal);
     setMutedState(newVal);
   };
+
   return (
     <div className="game-layout">
+      {isOnline && onLeave && <OnlineStatusBar onLeave={onLeave} />}
       <header className="game-header">
         <h1>Chess Gold</h1>
         <div className="header-actions">
-          <select
-            className="starting-gold-select"
-            value={startingGold}
-            onChange={e => setStartingGold(Number(e.target.value))}
-            disabled={gameInProgress}
-            title="Starting gold"
-          >
-            {STARTING_GOLD_OPTIONS.map(g => (
-              <option key={g} value={g}>{g}🪙</option>
-            ))}
-          </select>
-          <button onClick={resetGame} className="new-game-header-button" title="New Game">
-            New Game
-          </button>
+          {!isOnline && (
+            <>
+              <div className="starting-gold-buttons" title="Starting gold">
+                {STARTING_GOLD_OPTIONS.map(g => (
+                  <button
+                    key={g}
+                    className={`starting-gold-option ${startingGold === g ? 'active' : ''}`}
+                    onClick={() => setStartingGold(g)}
+                    disabled={gameInProgress}
+                  >
+                    {g}<GoldCoin size={12}/>
+                  </button>
+                ))}
+              </div>
+              <button onClick={resetGame} className="new-game-header-button" title="New Game">
+                New Game
+              </button>
+            </>
+          )}
           <button onClick={() => setShowRules(true)} className="rules-button" title="Rules">
             ?
           </button>
-          <button onClick={undo} disabled={!canUndo} className="undo-button" title="Undo">
-            Undo
-          </button>
+          {!isOnline && (
+            <button onClick={undo} disabled={!canUndo} className="undo-button" title="Undo">
+              Undo
+            </button>
+          )}
           <button onClick={flipBoard} className="flip-button" title="Flip board">
             ⟳
           </button>
@@ -74,10 +95,43 @@ function GameView() {
   );
 }
 
+function OnlineGameWrapper({ roomId, color, socket, onLeave }: { roomId: string; color: Color; socket: Socket<ServerEvents, ClientEvents>; onLeave: () => void }) {
+  const game = useOnlineGame(roomId, color, socket);
+  return (
+    <OnlineGameProvider value={game}>
+      <GameView isOnline onLeave={onLeave} />
+    </OnlineGameProvider>
+  );
+}
+
 export default function App() {
+  const [screen, setScreen] = useState<AppScreen>({ type: 'lobby' });
+
+  const handleLocalGame = useCallback(() => {
+    setScreen({ type: 'local' });
+  }, []);
+
+  const handleJoinedRoom = useCallback((roomId: string, color: Color, _socket: Socket<ServerEvents, ClientEvents>) => {
+    setScreen({ type: 'online', roomId, color, socket: _socket });
+  }, []);
+
+  const handleLeave = useCallback(() => {
+    setScreen({ type: 'lobby' });
+  }, []);
+
+  if (screen.type === 'lobby') {
+    return <Lobby onLocalGame={handleLocalGame} onJoinedRoom={handleJoinedRoom} />;
+  }
+
+  if (screen.type === 'online') {
+    return <OnlineGameWrapper roomId={screen.roomId} color={screen.color} socket={screen.socket} onLeave={handleLeave} />;
+  }
+
+  // Local game
   return (
     <GameProvider>
-      <GameView />
+      <GameView isOnline={false} onLeave={handleLeave} />
+      <button className="back-to-lobby" onClick={handleLeave}>← Back to Lobby</button>
     </GameProvider>
   );
 }
