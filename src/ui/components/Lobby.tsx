@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { GoldCoin } from './GoldCoin.tsx';
 import type { Color } from '../../engine/types.ts';
 import type { ClientEvents, ServerEvents, RoomInfo } from '../../server/protocol.ts';
 
@@ -155,14 +156,14 @@ export function Lobby({ onLocalGame, onJoinedRoom }: Props) {
         <h2>Create Room</h2>
         <div className="lobby-create">
           <label>
-            Starting Gold:
+            Starting Gold: <GoldCoin size={16}/>
             <select
               value={startingGold}
               onChange={e => setStartingGold(Number(e.target.value))}
               className="starting-gold-select"
             >
               {STARTING_GOLD_OPTIONS.map(g => (
-                <option key={g} value={g}>{g}🪙</option>
+                <option key={g} value={g}>{g}</option>
               ))}
             </select>
           </label>
@@ -207,7 +208,7 @@ export function Lobby({ onLocalGame, onJoinedRoom }: Props) {
                 onClick={() => joinRoom(room.id)}
               >
                 <span className="room-id">{room.id}</span>
-                <span className="room-gold">{room.startingGold}🪙</span>
+                <span className="room-gold">{room.startingGold}<GoldCoin size={14}/></span>
                 <span className="room-players">{room.players}/2</span>
               </button>
             ))}

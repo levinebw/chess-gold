@@ -100,40 +100,35 @@ body {
   opacity: 1;
 }
 
-.starting-gold-buttons {
-  display: inline-flex;
-  gap: 2px;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.starting-gold-option {
+.starting-gold-picker {
   display: inline-flex;
   align-items: center;
-  gap: 1px;
-  padding: 0.25rem 0.45rem;
+  gap: 4px;
+}
+
+.starting-gold-select {
+  padding: 0.3rem 0.5rem;
   background: #333;
   border: 1px solid #444;
+  border-radius: 4px;
   color: #e0e0e0;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: border-color 0.15s;
 }
 
-.starting-gold-option:hover:not(:disabled) {
+.starting-gold-select:hover:not(:disabled) {
   border-color: #d4a843;
 }
 
-.starting-gold-option.active {
-  background: #d4a843;
-  color: #1a1a1a;
-  border-color: #d4a843;
-  font-weight: bold;
-}
-
-.starting-gold-option:disabled {
+.starting-gold-select:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+.starting-gold-select option {
+  background: #333;
+  color: #e0e0e0;
 }
 
 .new-game-header-button {

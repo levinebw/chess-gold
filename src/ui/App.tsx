@@ -45,17 +45,18 @@ function GameView({ isOnline, onLeave }: { isOnline: boolean; onLeave?: () => vo
         <div className="header-actions">
           {!isOnline && (
             <>
-              <div className="starting-gold-buttons" title="Starting gold">
-                {STARTING_GOLD_OPTIONS.map(g => (
-                  <button
-                    key={g}
-                    className={`starting-gold-option ${startingGold === g ? 'active' : ''}`}
-                    onClick={() => setStartingGold(g)}
-                    disabled={gameInProgress}
-                  >
-                    {g}<GoldCoin size={12}/>
-                  </button>
-                ))}
+              <div className="starting-gold-picker" title="Starting gold">
+                <GoldCoin size={16}/>
+                <select
+                  className="starting-gold-select"
+                  value={startingGold}
+                  onChange={e => setStartingGold(Number(e.target.value))}
+                  disabled={gameInProgress}
+                >
+                  {STARTING_GOLD_OPTIONS.map(g => (
+                    <option key={g} value={g}>{g}</option>
+                  ))}
+                </select>
               </div>
               <button onClick={resetGame} className="new-game-header-button" title="New Game">
                 New Game
