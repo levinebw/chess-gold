@@ -41,7 +41,7 @@ function isPromotionMove(fen: string, from: Square, to: Square): boolean {
 }
 
 export function Board() {
-  const { state, dispatch, error, legalDests, placingPiece, placementSquares, cancelPlacement } = useGameContext();
+  const { state, dispatch, error, legalDests, placingPiece, placementSquares, cancelPlacement, boardOrientation } = useGameContext();
   const boardRef = useRef<HTMLDivElement>(null);
   const cgRef = useRef<Api | null>(null);
   const [pendingPromotion, setPendingPromotion] = useState<{ from: Square; to: Square } | null>(null);
@@ -100,6 +100,7 @@ export function Board() {
     cgRef.current.set({
       fen: state.fen,
       turnColor: state.turn,
+      orientation: boardOrientation,
       lastMove,
       check: isInCheck(state) ? state.turn : undefined,
       movable: {
@@ -108,7 +109,7 @@ export function Board() {
         dests: blocked ? new Map() : legalDestsToChessground(legalDests),
       },
     });
-  }, [state, legalDests, placingPiece, pendingPromotion, error]);
+  }, [state, legalDests, placingPiece, pendingPromotion, error, boardOrientation]);
 
   // Play sounds on state changes
   const prevActionCount = useRef(state.actionHistory.length);

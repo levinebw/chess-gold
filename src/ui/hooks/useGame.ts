@@ -11,6 +11,7 @@ export function useGame(modeConfig?: GameModeConfig) {
   const [stateHistory, setStateHistory] = useState<GameState[]>([]);
   const [error, setError] = useState<GameError | null>(null);
   const [placingPiece, setPlacingPiece] = useState<PurchasableRole | null>(null);
+  const [boardOrientation, setBoardOrientation] = useState<'white' | 'black'>('white');
 
   const dispatch = useCallback((action: GameAction) => {
     setState(prev => {
@@ -90,5 +91,7 @@ export function useGame(modeConfig?: GameModeConfig) {
     config: CHESS_GOLD_CONFIG,
     startingGold,
     setStartingGold,
+    boardOrientation,
+    flipBoard: useCallback(() => setBoardOrientation(o => o === 'white' ? 'black' : 'white'), []),
   };
 }

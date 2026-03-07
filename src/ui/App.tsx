@@ -14,7 +14,7 @@ import '../styles/main.css';
 const STARTING_GOLD_OPTIONS = [1, 3, 5, 10, 100];
 
 function GameView() {
-  const { undo, canUndo, resetGame, startingGold, setStartingGold, state } = useGameContext();
+  const { undo, canUndo, resetGame, startingGold, setStartingGold, state, flipBoard } = useGameContext();
   const [showRules, setShowRules] = useState(false);
   const [muted, setMutedState] = useState(isMuted);
   const gameInProgress = state.actionHistory.length > 0;
@@ -48,6 +48,9 @@ function GameView() {
           </button>
           <button onClick={undo} disabled={!canUndo} className="undo-button" title="Undo">
             Undo
+          </button>
+          <button onClick={flipBoard} className="flip-button" title="Flip board">
+            ⟳
           </button>
           <button onClick={toggleMute} className="mute-button" title={muted ? 'Unmute' : 'Mute'}>
             {muted ? '\uD83D\uDD07' : '\uD83D\uDD0A'}
