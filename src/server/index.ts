@@ -220,5 +220,5 @@ app.get('/health', (_req, res) => {
 
 const PORT = parseInt(process.env.PORT ?? '3001', 10);
 httpServer.listen(PORT, () => {
-  console.log(`Chess Gold server listening on port ${PORT}`);
+  console.log(`Chess Gold server v1.0 listening on port ${PORT}`);
 });
