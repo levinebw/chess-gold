@@ -1,0 +1,16 @@
+node_modules
+dist
+test
+test-results
+.git
+.github
+*.md
+src/ui
+src/styles
+src/assets
+src/main.tsx
+src/App.tsx
+src/App.css
+src/index.css
+src/vite-env.d.ts
+public
