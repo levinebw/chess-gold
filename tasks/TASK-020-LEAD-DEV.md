@@ -120,11 +120,13 @@ const io = new Server(server, {
 
 ### Done When
 
-- [ ] Dockerfile builds successfully
-- [ ] GitHub Actions workflow deploys to Cloud Run
-- [ ] Server scales to zero when idle
-- [ ] Frontend connects to production server
-- [ ] Two players can play online via the deployed URLs
-- [ ] CORS is correctly configured
-- [ ] All tests pass
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] Dockerfile builds successfully
+- [x] GitHub Actions workflow deploys to Cloud Run
+- [x] Server scales to zero when idle
+- [x] Frontend connects to production server
+- [x] Two players can play online via the deployed URLs
+- [x] CORS is correctly configured
+- [x] All tests pass
+- [x] Commit and push

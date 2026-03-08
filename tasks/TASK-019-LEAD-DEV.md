@@ -86,14 +86,16 @@ Set via environment variable for production (Cloud Run URL).
 
 ### Done When
 
-- [ ] Menu screen with Local / Create / Join options
-- [ ] Can create a room and see the room code
-- [ ] Can join a room by entering a code
-- [ ] Two players can play a full game online
-- [ ] Board orientation matches player color
-- [ ] Opponent disconnection is shown
-- [ ] Auto-reconnect works
-- [ ] Local play still works
-- [ ] Undo is disabled in online mode
-- [ ] All existing tests pass
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] Menu screen with Local / Create / Join options
+- [x] Can create a room and see the room code
+- [x] Can join a room by entering a code
+- [x] Two players can play a full game online
+- [x] Board orientation matches player color
+- [x] Opponent disconnection is shown
+- [x] Auto-reconnect works
+- [x] Local play still works
+- [x] Undo is disabled in online mode
+- [x] All existing tests pass
+- [x] Commit and push

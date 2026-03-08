@@ -51,8 +51,10 @@ Write results to `test/reports/multiplayer-playtest.md`.
 
 ### Done When
 
-- [ ] All 5 local tests pass
-- [ ] Production test passes
-- [ ] Report written with detailed steps and observations
-- [ ] Any bugs filed with reproduction steps
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] All 5 local tests pass
+- [x] Production test passes
+- [x] Report written with detailed steps and observations
+- [x] Any bugs filed with reproduction steps
+- [x] Commit and push

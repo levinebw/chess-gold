@@ -109,14 +109,16 @@ Create `tsconfig.server.json` extending the base config but targeting Node.js (n
 
 ### Done When
 
-- [ ] Server starts and listens on port 8080
-- [ ] Can create a room and get a room code
-- [ ] Two clients can join the same room
-- [ ] Moves are validated server-side and broadcast to both players
-- [ ] Invalid moves return errors only to the acting player
-- [ ] Turn enforcement works (can't move when it's not your turn)
-- [ ] Disconnection is detected and opponent is notified
-- [ ] Health check endpoint responds
-- [ ] `npm run dev:server` works locally
-- [ ] All existing frontend tests still pass
-- [ ] Commit and push
+**Status: COMPLETE**
+
+- [x] Server starts and listens on port 8080
+- [x] Can create a room and get a room code
+- [x] Two clients can join the same room
+- [x] Moves are validated server-side and broadcast to both players
+- [x] Invalid moves return errors only to the acting player
+- [x] Turn enforcement works (can't move when it's not your turn)
+- [x] Disconnection is detected and opponent is notified
+- [x] Health check endpoint responds
+- [x] `npm run dev:server` works locally
+- [x] All existing frontend tests still pass
+- [x] Commit and push

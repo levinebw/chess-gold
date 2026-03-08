@@ -71,17 +71,17 @@ Deployed to GitHub Pages via GitHub Actions.
 
 ---
 
-## Phase 4 — Online Multiplayer (`v0.4`) 📋 TASKS DEFINED
+## Phase 4 — Online Multiplayer (`v0.4`) ✅ COMPLETE
 
 GCP Cloud Run + Socket.IO. See `tasks/PHASE-4-INFRA-DECISION.md` for architecture rationale.
 
 | Task | Role | Title | Status |
 |------|------|-------|--------|
 | 017 | Lead Dev | Extract Shared Engine Package | ✅ Complete |
-| 018 | Lead Dev | Multiplayer Server: Room System + Socket.IO | 🔄 In progress |
-| 019 | Lead Dev | Multiplayer Client: Lobby UI + Network Integration | ⬚ Not started |
-| 020 | Lead Dev | Deploy Server to GCP Cloud Run | ⬚ Not started |
-| 021 | QA | Multiplayer Integration Testing | ⬚ Not started |
+| 018 | Lead Dev | Multiplayer Server: Room System + Socket.IO | ✅ Complete |
+| 019 | Lead Dev | Multiplayer Client: Lobby UI + Network Integration | ✅ Complete |
+| 020 | Lead Dev | Deploy Server to GCP Cloud Run | ✅ Complete |
+| 021 | QA | Multiplayer Integration Testing | ✅ Complete |
 
 **Dependencies:**
 - Task 017 → 018, 019 (shared engine must be extracted first)
@@ -208,7 +208,7 @@ Game modes 7 and 8.
 | 1 | v0.1 | MVP: Local 2-Player | 001-010 | ✅ Complete |
 | 2 | v0.2 | UI/UX Polish | 011-016, 022 | ✅ Complete |
 | 3 | v0.3 | Web Deployment | (009, 011) | ✅ Complete |
-| 4 | v0.4 | Online Multiplayer | 017-021 | 📋 Defined |
+| 4 | v0.4 | Online Multiplayer | 017-021 | ✅ Complete |
 | 5 | v0.5 | Bot Opponent | — | 🔲 Not defined |
 | 6 | v0.6 | Conqueror + Standard Chess | — | 🔲 Not defined |
 | 7 | v0.7 | Loot Boxes | — | 🔲 Not defined |
