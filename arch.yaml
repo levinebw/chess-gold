@@ -8,28 +8,28 @@ project:
 agent_pool:
   - id: engine-dev
     persona: agents/AGENT-LEAD-DEVELOPER.md
-    model: claude-sonnet-4-6
+    model: claude-opus-4-6
     description: >
       Implements piece conversion engine logic, all-converted win condition,
       and standard chess mode wiring in src/engine/. Owns game.ts, position.ts,
       and related engine modules.
 
   - id: frontend-dev
-    persona: personas/frontend.md
-    model: claude-sonnet-4-6
+    persona: agents/AGENT-LEAD-DEVELOPER.md
+    model: claude-opus-4-6
     description: >
       Builds the mode selector screen, hides shop/gold for non-economy modes,
       adds "Back to Menu" flow. Owns src/ui/ components and src/styles/main.css.
 
   - id: qa-engineer
     persona: agents/AGENT-QA.md
-    model: claude-sonnet-4-6
+    model: claude-opus-4-6
     description: >
       Writes tests for mode selection, piece conversion, all-converted win
       condition, and Standard Chess. Runs regression tests. Owns test/ directory.
 
 settings:
-  max_concurrent_agents: 3
+  max_concurrent_agents: 5
   token_budget_usd: 15.00
   auto_approve_team: false
   auto_merge: false
