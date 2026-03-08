@@ -30,8 +30,15 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
   useEffect(() => {
     const socket = socketRef.current;
 
-    // Remove any lobby handlers
-    socket.removeAllListeners();
+    // Remove lobby handlers (targeted — don't strip Socket.IO internals)
+    socket.off('player-joined');
+    socket.off('game-state');
+    socket.off('player-disconnected');
+    socket.off('player-reconnected');
+    socket.off('action-error');
+    socket.off('rematch-requested');
+    socket.off('rematch-accepted');
+    socket.off('room-closed');
 
     const onGameState = (newState: GameState) => {
       setState(newState);
@@ -70,6 +77,20 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
       setOnlineStatus('room-closed');
     };
 
+    const onDisconnect = () => {
+      setOnlineStatus('error');
+    };
+
+    const onReconnect = () => {
+      // Re-join room to restore server-side socket mapping
+      socket.emit('join-room', roomId, (res: { state?: GameState; error?: string }) => {
+        if (res.state) {
+          setState(res.state);
+          setOnlineStatus('playing');
+        }
+      });
+    };
+
     socket.on('game-state', onGameState);
     socket.on('action-error', onActionError);
     socket.on('player-joined', onPlayerJoined);
@@ -78,6 +99,8 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
     socket.on('rematch-requested', onRematchRequested);
     socket.on('rematch-accepted', onRematchAccepted);
     socket.on('room-closed', onRoomClosed);
+    socket.on('disconnect', onDisconnect);
+    socket.on('connect', onReconnect);
 
     return () => {
       socket.off('game-state', onGameState);
@@ -88,6 +111,8 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
       socket.off('rematch-requested', onRematchRequested);
       socket.off('rematch-accepted', onRematchAccepted);
       socket.off('room-closed', onRoomClosed);
+      socket.off('disconnect', onDisconnect);
+      socket.off('connect', onReconnect);
     };
   }, []);
 

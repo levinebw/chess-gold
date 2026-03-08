@@ -142,14 +142,19 @@ io.on('connection', (socket) => {
       return;
     }
 
-    const result = applyAction(room.state, action);
-    if ('type' in result && result.type === 'error') {
-      socket.emit('action-error', result as GameError);
-      return;
-    }
+    try {
+      const result = applyAction(room.state, action);
+      if ('type' in result && result.type === 'error') {
+        socket.emit('action-error', result as GameError);
+        return;
+      }
 
-    room.state = result as GameState;
-    io.to(roomId).emit('game-state', room.state);
+      room.state = result as GameState;
+      io.to(roomId).emit('game-state', room.state);
+    } catch (err) {
+      console.error(`Action error in room ${roomId}:`, err);
+      socket.emit('action-error', { type: 'error', code: 'INVALID_ACTION', message: 'Server error processing action' } as GameError);
+    }
   });
 
   socket.on('request-rematch', (roomId) => {

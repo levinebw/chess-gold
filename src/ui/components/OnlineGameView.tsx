@@ -32,6 +32,9 @@ export function OnlineStatusBar({ onLeave }: Props) {
       {onlineStatus === 'room-closed' && (
         <span className="online-warning">Room closed — opponent left</span>
       )}
+      {onlineStatus === 'error' && (
+        <span className="online-warning">Connection lost — reconnecting...</span>
+      )}
       <button className="lobby-button secondary small" onClick={onLeave}>Leave</button>
     </div>
   );
