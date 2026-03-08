@@ -123,7 +123,7 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
   // 6. Check game-over
   const winConditions = current.modeConfig.winConditions;
 
-  if (winConditions.includes('checkmate') && isCheckmate(current)) {
+  if (!current.modeConfig.noCheck && isCheckmate(current)) {
     current = {
       ...current,
       status: 'checkmate',
