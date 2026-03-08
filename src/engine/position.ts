@@ -50,39 +50,54 @@ export function applyMove(state: GameState, from: Square, to: Square, promotion?
   // Record captured piece info for piece conversion
   let capturedRole: ChessopsRole | null = null;
   let capturedSquare: number | null = null;
+  const isCapture = (capturedPiece && capturedPiece.role !== 'king') || isEnPassant;
 
   if (capturedPiece && capturedPiece.role !== 'king') {
     capturedRole = capturedPiece.role;
     capturedSquare = to;
   } else if (isEnPassant) {
     capturedRole = 'pawn';
-    // En passant: captured pawn is one rank behind the target square
     capturedSquare = state.turn === 'white' ? to - 8 : to + 8;
   }
 
-  pos.play({
-    from,
-    to,
-    promotion: promotion as ChessopsRole | undefined,
-  });
+  let newFen: string;
 
-  let newFen = makeFen(pos.toSetup());
+  if (state.modeConfig.pieceConversion && isCapture && capturedRole !== null && capturedSquare !== null) {
+    // Piece conversion capture: don't use pos.play() — manipulate the board directly.
+    // Attacker stays on its square. Captured piece changes color in place.
+    const setup = parseFen(state.fen);
+    if (setup.isErr) throw new Error(`Invalid FEN: ${state.fen}`);
 
-  // Piece conversion: capturing piece returns to its origin square,
-  // captured piece stays on its square but changes to the capturer's color
-  if (state.modeConfig.pieceConversion && capturedRole !== null && capturedSquare !== null) {
-    const setup = parseFen(newFen);
-    if (!setup.isErr) {
-      // Move the capturing piece back to where it started
-      const attackerOnTarget = setup.value.board.get(to);
-      if (attackerOnTarget) {
-        setup.value.board.set(from, attackerOnTarget);
-        setup.value.board.delete(to);
-      }
-      // Place the captured piece on its square in the capturer's color
-      setup.value.board.set(capturedSquare, { role: capturedRole, color: state.turn });
-      newFen = makeFen(setup.value);
+    // Convert the captured piece to the attacker's color
+    setup.value.board.set(capturedSquare, { role: capturedRole, color: state.turn });
+
+    // Handle en passant: remove the pawn from its actual square (it's not on `to`)
+    if (isEnPassant) {
+      // The en passant pawn was already set to capturer's color above at capturedSquare.
+      // Clear the en passant target square if different from capturedSquare.
     }
+
+    // Flip the turn in the FEN
+    setup.value.turn = state.turn === 'white' ? 'black' : 'white';
+    // Clear en passant square
+    setup.value.epSquare = undefined;
+    // Increment halfmove clock
+    setup.value.halfmoves = (setup.value.halfmoves ?? 0) + 1;
+    // Increment fullmove number after black's move
+    if (state.turn === 'black') {
+      setup.value.fullmoves = (setup.value.fullmoves ?? 1) + 1;
+    }
+
+    newFen = makeFen(setup.value);
+  } else {
+    // Normal move (no piece conversion capture)
+    pos.play({
+      from,
+      to,
+      promotion: promotion as ChessopsRole | undefined,
+    });
+
+    newFen = makeFen(pos.toSetup());
   }
 
   // Award capture gold BEFORE flipping turn (so state.turn is the capturing player)

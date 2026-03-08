@@ -4,13 +4,17 @@ import { CHESS_GOLD_CONFIG, MODE_PRESETS } from './config.ts';
 import { awardTurnIncome, canAffordPiece, deductPurchaseCost } from './gold.ts';
 import { isValidPlacement, placementResolvesCheck } from './placement.ts';
 import { getLegalMoves, isInCheck, isCheckmate, isStalemate, applyMove } from './position.ts';
+import { checkAllConverted } from './win-conditions.ts';
 
 const KINGS_ONLY_FEN = '4k3/8/8/8/8/8/8/4K3 w - - 0 1';
+const STANDARD_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 export function createInitialState(modeConfig?: GameModeConfig, startingGold?: number): GameState {
+  const config = modeConfig ?? MODE_PRESETS['chess-gold'];
   const gold = startingGold ?? CHESS_GOLD_CONFIG.startingGold;
+  const fen = config.standardStart ? STANDARD_FEN : KINGS_ONLY_FEN;
   return {
-    fen: KINGS_ONLY_FEN,
+    fen,
     turn: 'white',
     turnNumber: 1,
     halfMoveCount: 0,
@@ -26,7 +30,7 @@ export function createInitialState(modeConfig?: GameModeConfig, startingGold?: n
     status: 'active',
     winner: null,
     actionHistory: [],
-    modeConfig: modeConfig ?? MODE_PRESETS['chess-gold'],
+    modeConfig: config,
   };
 }
 
@@ -117,7 +121,9 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
   };
 
   // 6. Check game-over
-  if (isCheckmate(current)) {
+  const winConditions = current.modeConfig.winConditions;
+
+  if (winConditions.includes('checkmate') && isCheckmate(current)) {
     current = {
       ...current,
       status: 'checkmate',
@@ -128,6 +134,20 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
       ...current,
       status: 'stalemate',
     };
+  }
+
+  // Check mode-specific win conditions
+  if (current.status !== 'checkmate' && current.status !== 'stalemate') {
+    if (winConditions.includes('all-converted')) {
+      const winner = checkAllConverted(current);
+      if (winner) {
+        current = {
+          ...current,
+          status: 'checkmate',
+          winner,
+        };
+      }
+    }
   }
 
   return current;
