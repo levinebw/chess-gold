@@ -179,7 +179,27 @@
 
 ## Bugs Found
 
-**None.** All 5 required test scenarios and 2 bonus scenarios pass cleanly on both local and production environments.
+### BUG-001: Lobby cleanup disconnects socket — multiplayer dead on arrival
+
+**Bug**: Lobby component's `useEffect` cleanup always disconnects the socket when the Lobby unmounts, even when the socket has been handed off to the online game view.
+**Severity**: Critical
+**Module**: `src/ui/components/Lobby.tsx`
+
+**Root Cause**: The cleanup closure captures `status` from the initial render (`'idle'`), so the condition `status !== 'waiting'` is always `true`. The socket is disconnected before `useOnlineGame` can use it. Neither player receives `game-state` events after joining.
+
+**Steps to Reproduce**:
+1. Open two browsers (e.g., Chrome + Safari)
+2. Browser A: Create online room → get room code
+3. Browser B: Join with room code
+4. White makes first move (place piece or move king)
+5. Observe: nothing happens on black's board
+
+**Expected**: Both boards sync after each action
+**Actual**: Socket is disconnected by Lobby cleanup; all server events are lost
+
+**Fix**: Added `handedOffRef` (useRef) — set to `true` before calling `onJoinedRoom`, checked in cleanup to skip `socket.disconnect()` when the socket has been passed to the game view.
+
+**Regression Test**: The programmatic Socket.IO tests (test/multiplayer-integration.mjs) bypass the Lobby and test the server protocol directly, so they did not catch this client-side React lifecycle bug. A Playwright E2E test would be needed to catch this class of bug in the future.
 
 ---
 

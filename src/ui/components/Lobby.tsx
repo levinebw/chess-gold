@@ -23,6 +23,7 @@ export function Lobby({ onLocalGame, onJoinedRoom }: Props) {
   const [waitingRoomId, setWaitingRoomId] = useState<string | null>(null);
   const [rooms, setRooms] = useState<RoomInfo[]>([]);
   const socketRef = useRef<TypedSocket | null>(null);
+  const handedOffRef = useRef(false);
 
   // Fetch open rooms on mount
   useEffect(() => {
@@ -35,22 +36,8 @@ export function Lobby({ onLocalGame, onJoinedRoom }: Props) {
       });
     });
 
-    socket.on('player-joined', () => {
-      // Opponent joined our room — start the game
-      if (waitingRoomId && socketRef.current) {
-        onJoinedRoom(waitingRoomId, 'white', socketRef.current);
-      }
-    });
-
-    socket.on('game-state', () => {
-      // Game started after opponent joined
-      if (waitingRoomId && socketRef.current) {
-        onJoinedRoom(waitingRoomId, 'white', socketRef.current);
-      }
-    });
-
     return () => {
-      if (status !== 'waiting') {
+      if (!handedOffRef.current) {
         socket.disconnect();
       }
     };
@@ -63,6 +50,7 @@ export function Lobby({ onLocalGame, onJoinedRoom }: Props) {
     if (!socket || !waitingRoomId) return;
 
     const handleJoined = () => {
+      handedOffRef.current = true;
       onJoinedRoom(waitingRoomId, 'white', socket);
     };
 
@@ -106,6 +94,7 @@ export function Lobby({ onLocalGame, onJoinedRoom }: Props) {
         return;
       }
       if (res.roomId && res.color) {
+        handedOffRef.current = true;
         onJoinedRoom(res.roomId, res.color, socket);
       }
     });

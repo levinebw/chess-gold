@@ -117,7 +117,12 @@ export default function App() {
   }, []);
 
   const handleLeave = useCallback(() => {
-    setScreen({ type: 'lobby' });
+    setScreen(prev => {
+      if (prev.type === 'online') {
+        prev.socket.disconnect();
+      }
+      return { type: 'lobby' };
+    });
   }, []);
 
   if (screen.type === 'lobby') {

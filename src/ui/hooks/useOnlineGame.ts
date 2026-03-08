@@ -88,7 +88,6 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
       socket.off('rematch-requested', onRematchRequested);
       socket.off('rematch-accepted', onRematchAccepted);
       socket.off('room-closed', onRoomClosed);
-      socket.disconnect();
     };
   }, []);
 
