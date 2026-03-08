@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { GoldCoin } from './GoldCoin.tsx';
-import type { Color } from '../../engine/types.ts';
+import type { Color, GameModeConfig } from '../../engine/types.ts';
 import type { ClientEvents, ServerEvents, RoomInfo } from '../../server/protocol.ts';
 
 type TypedSocket = Socket<ServerEvents, ClientEvents>;
@@ -13,9 +13,11 @@ const STARTING_GOLD_OPTIONS = [1, 3, 5, 10, 100];
 interface Props {
   onLocalGame: () => void;
   onJoinedRoom: (roomId: string, color: Color, socket: TypedSocket) => void;
+  onBackToMenu?: () => void;
+  modeConfig?: GameModeConfig;
 }
 
-export function Lobby({ onLocalGame, onJoinedRoom }: Props) {
+export function Lobby({ onLocalGame, onJoinedRoom, onBackToMenu, modeConfig }: Props) {
   const [joinCode, setJoinCode] = useState('');
   const [startingGold, setStartingGold] = useState(3);
   const [status, setStatus] = useState<'idle' | 'connecting' | 'waiting' | 'error'>('idle');
@@ -129,9 +131,16 @@ export function Lobby({ onLocalGame, onJoinedRoom }: Props) {
     );
   }
 
+  const showEconomy = modeConfig?.goldEconomy !== false;
+
   return (
     <div className="lobby">
-      <h1>Chess Gold</h1>
+      <h1>{modeConfig?.name ?? 'Chess Gold'}</h1>
+      {onBackToMenu && (
+        <button className="lobby-button secondary lobby-back-to-menu" onClick={onBackToMenu}>
+          ← Change Mode
+        </button>
+      )}
 
       <div className="lobby-section">
         <button className="lobby-button primary" onClick={onLocalGame}>
@@ -144,18 +153,20 @@ export function Lobby({ onLocalGame, onJoinedRoom }: Props) {
       <div className="lobby-section">
         <h2>Create Room</h2>
         <div className="lobby-create">
-          <label>
-            Starting Gold: <GoldCoin size={16}/>
-            <select
-              value={startingGold}
-              onChange={e => setStartingGold(Number(e.target.value))}
-              className="starting-gold-select"
-            >
-              {STARTING_GOLD_OPTIONS.map(g => (
-                <option key={g} value={g}>{g}</option>
-              ))}
-            </select>
-          </label>
+          {showEconomy && (
+            <label>
+              Starting Gold: <GoldCoin size={16}/>
+              <select
+                value={startingGold}
+                onChange={e => setStartingGold(Number(e.target.value))}
+                className="starting-gold-select"
+              >
+                {STARTING_GOLD_OPTIONS.map(g => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+            </label>
+          )}
           <button className="lobby-button primary" onClick={createRoom} disabled={status === 'connecting'}>
             {status === 'connecting' ? 'Creating...' : 'Create Room'}
           </button>
