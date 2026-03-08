@@ -2,7 +2,7 @@ List of bugs abd enhancements
 
 Bugs
 1. When you put the other king in check, and he places a piece that doesn’t help get unchecked, then the game just crashes.
-2. The sound it makes when it checks is a checkmate sound
+2. The sound it makes when it checks is not a checkmate sound
 3. When you play on a bigger screen, then the game stays small. Make it expand along with the size of the screen
 4. When placing a new piece to defend a check, you can’t block and check the opponents king at the same time (fixed)
 

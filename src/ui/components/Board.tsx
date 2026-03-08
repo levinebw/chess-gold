@@ -95,6 +95,9 @@ export function Board() {
     let lastMove: [Key, Key] | undefined;
     if (lastAction?.type === 'move') {
       lastMove = [squareToKey(lastAction.from), squareToKey(lastAction.to)];
+    } else if (lastAction?.type === 'place') {
+      const key = squareToKey(lastAction.square);
+      lastMove = [key, key];
     }
 
     cgRef.current.set({

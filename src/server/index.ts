@@ -10,7 +10,7 @@ const httpServer = createServer(app);
 
 const io = new Server<ClientEvents, ServerEvents>(httpServer, {
   cors: {
-    origin: process.env.CLIENT_ORIGIN ?? 'http://localhost:5173',
+    origin: process.env.CLIENT_ORIGIN?.split(',') ?? 'http://localhost:5173',
     methods: ['GET', 'POST'],
   },
 });
