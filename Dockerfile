@@ -15,4 +15,6 @@ EXPOSE 3001
 ENV NODE_ENV=production
 ENV PORT=3001
 
+USER node
+
 CMD ["npx", "tsx", "src/server/index.ts"]

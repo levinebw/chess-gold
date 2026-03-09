@@ -1,16 +1,20 @@
 import express from 'express';
+import helmet from 'helmet';
 import { createServer } from 'node:http';
+import { randomBytes } from 'node:crypto';
 import { Server } from 'socket.io';
 import { createInitialState, applyAction } from '../engine/index.ts';
 import type { GameState, GameError, Color } from '../engine/index.ts';
 import type { ClientEvents, ServerEvents, RoomInfo } from './protocol.ts';
 
 const app = express();
+app.disable('x-powered-by');
+app.use(helmet());
 const httpServer = createServer(app);
 
 const io = new Server<ClientEvents, ServerEvents>(httpServer, {
   cors: {
-    origin: process.env.CLIENT_ORIGIN?.split(',') ?? 'http://localhost:5173',
+    origin: process.env.CLIENT_ORIGIN?.split(',').map(o => o.trim()) ?? 'http://localhost:5173',
     methods: ['GET', 'POST'],
   },
 });
@@ -30,11 +34,13 @@ interface Room {
 
 const rooms = new Map<string, Room>();
 
+const MAX_ROOMS = 1000;
 const DISCONNECT_GRACE_MS = 30_000;
 const ROOM_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
+const ROOM_MAX_LIFETIME_MS = 4 * 60 * 60 * 1000; // 4 hours absolute
 
 function generateRoomId(): string {
-  return Math.random().toString(36).slice(2, 8);
+  return randomBytes(4).toString('hex'); // 8 hex chars
 }
 
 function getPlayerColor(room: Room, socketId: string): Color | null {
@@ -68,7 +74,12 @@ function toRoomInfo(room: Room): RoomInfo {
 setInterval(() => {
   const now = Date.now();
   for (const [roomId, room] of rooms) {
-    if (now - room.createdAt > ROOM_EXPIRY_MS && playerCount(room) === 0) {
+    const age = now - room.createdAt;
+    if (age > ROOM_MAX_LIFETIME_MS) {
+      io.to(roomId).emit('room-closed', 'Room expired');
+      rooms.delete(roomId);
+      console.log(`Force-expired room ${roomId} (age: ${Math.round(age / 60000)}m)`);
+    } else if (age > ROOM_EXPIRY_MS && playerCount(room) === 0) {
       rooms.delete(roomId);
       console.log(`Expired empty room ${roomId}`);
     }
@@ -81,6 +92,10 @@ io.on('connection', (socket) => {
   console.log(`Connected: ${socket.id}`);
 
   socket.on('create-room', (opts, callback) => {
+    if (rooms.size >= MAX_ROOMS) {
+      callback({ roomId: '', color: 'white', error: 'Server is at capacity' });
+      return;
+    }
     const roomId = generateRoomId();
     const startingGold = opts?.startingGold ?? 3;
     const modeConfig = opts?.modeConfig;
@@ -222,7 +237,7 @@ io.on('connection', (socket) => {
 // --- Health check ---
 
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', rooms: rooms.size });
+  res.json({ status: 'ok' });
 });
 
 // --- Start ---

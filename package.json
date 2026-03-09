@@ -18,6 +18,7 @@
     "chessground": "^9.2.1",
     "chessops": "^0.15.0",
     "express": "^5.2.1",
+    "helmet": "^8.1.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "socket.io": "^4.8.3",
