@@ -1,4 +1,4 @@
-import type { GameState, GameAction, GameError, Color } from '../engine/index.ts';
+import type { GameState, GameAction, GameError, Color, GameModeConfig } from '../engine/index.ts';
 
 // --- Client → Server events ---
 
@@ -12,6 +12,7 @@ export interface ClientEvents {
 
 export interface CreateRoomOpts {
   startingGold?: number;
+  modeConfig?: GameModeConfig;
 }
 
 export interface CreateRoomResponse {
@@ -46,4 +47,5 @@ export interface RoomInfo {
   players: number;
   status: 'waiting' | 'playing' | 'finished';
   startingGold: number;
+  modeName: string;
 }

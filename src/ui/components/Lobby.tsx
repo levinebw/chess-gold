@@ -74,7 +74,7 @@ export function Lobby({ onLocalGame, onJoinedRoom, onBackToMenu, modeConfig }: P
     }
 
     setStatus('connecting');
-    socket.emit('create-room', { startingGold }, (res) => {
+    socket.emit('create-room', { startingGold, modeConfig }, (res) => {
       setWaitingRoomId(res.roomId);
       setStatus('waiting');
     });

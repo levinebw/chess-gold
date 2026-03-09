@@ -59,6 +59,7 @@ function toRoomInfo(room: Room): RoomInfo {
     players: playerCount(room),
     status: roomStatus(room),
     startingGold: room.startingGold,
+    modeName: room.state.modeConfig.name,
   };
 }
 
@@ -82,11 +83,12 @@ io.on('connection', (socket) => {
   socket.on('create-room', (opts, callback) => {
     const roomId = generateRoomId();
     const startingGold = opts?.startingGold ?? 3;
+    const modeConfig = opts?.modeConfig;
     const room: Room = {
       id: roomId,
       white: socket.id,
       black: null,
-      state: createInitialState(undefined, startingGold),
+      state: createInitialState(modeConfig, startingGold),
       startingGold,
       rematchRequested: null,
       disconnectTimers: new Map(),
