@@ -64,17 +64,21 @@ export function applyMove(state: GameState, from: Square, to: Square, promotion?
 
   if (state.modeConfig.pieceConversion && isCapture && capturedRole !== null && capturedSquare !== null) {
     // Piece conversion capture: don't use pos.play() — manipulate the board directly.
-    // Attacker stays on its square. Captured piece changes color in place.
+    // Swap: attacker moves to target square, captured piece goes to attacker's
+    // origin square and switches color.
     const setup = parseFen(state.fen);
     if (setup.isErr) throw new Error(`Invalid FEN: ${state.fen}`);
 
-    // Convert the captured piece to the attacker's color
-    setup.value.board.set(capturedSquare, { role: capturedRole, color: state.turn });
+    const attackerRole = movingPiece!.role;
 
-    // Handle en passant: remove the pawn from its actual square (it's not on `to`)
-    if (isEnPassant) {
-      // The en passant pawn was already set to capturer's color above at capturedSquare.
-      // Clear the en passant target square if different from capturedSquare.
+    // Move attacker to the target square
+    setup.value.board.set(to, { role: attackerRole, color: state.turn });
+    // Place converted captured piece on attacker's origin square
+    setup.value.board.set(from, { role: capturedRole, color: state.turn });
+
+    // Handle en passant: remove the pawn from its actual square
+    if (isEnPassant && capturedSquare !== from && capturedSquare !== to) {
+      setup.value.board.set(capturedSquare, undefined as any);
     }
 
     // Flip the turn in the FEN
