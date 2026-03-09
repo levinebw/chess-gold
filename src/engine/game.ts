@@ -30,6 +30,7 @@ export function createInitialState(modeConfig?: GameModeConfig, startingGold?: n
     status: 'active',
     winner: null,
     actionHistory: [],
+    positionHistory: [],
     modeConfig: config,
   };
 }
@@ -40,7 +41,7 @@ function makeError(code: GameError['code'], message: string): GameError {
 
 export function applyAction(state: GameState, action: GameAction): GameState | GameError {
   // 1. Reject if game is over
-  if (state.status === 'checkmate' || state.status === 'stalemate') {
+  if (state.status === 'checkmate' || state.status === 'stalemate' || state.status === 'draw') {
     return makeError('GAME_OVER', 'Game is already over');
   }
 
@@ -111,13 +112,20 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
     actionHistory: [...current.actionHistory, action],
   };
 
-  // 5. Update counters
+  // 5. Update counters and position history
   const newHalfMoveCount = state.halfMoveCount + 1;
   const newTurnNumber = current.turn === 'white' ? state.turnNumber + 1 : state.turnNumber;
+
+  // Normalize FEN for repetition: board + turn + castling + en passant (drop clocks)
+  const fenParts = current.fen.split(' ');
+  const normalizedFen = fenParts.slice(0, 4).join(' ');
+  const newHistory = [...(current.positionHistory ?? []), normalizedFen];
+
   current = {
     ...current,
     halfMoveCount: newHalfMoveCount,
     turnNumber: newTurnNumber,
+    positionHistory: newHistory,
   };
 
   // 6. Check game-over
@@ -134,6 +142,12 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
       ...current,
       status: 'stalemate',
     };
+  } else {
+    // Threefold repetition
+    const count = newHistory.filter(f => f === normalizedFen).length;
+    if (count >= 3) {
+      current = { ...current, status: 'draw' };
+    }
   }
 
   // Check mode-specific win conditions

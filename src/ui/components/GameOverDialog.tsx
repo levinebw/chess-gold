@@ -9,7 +9,7 @@ export function GameOverDialog() {
   const rematchRequested = 'rematchRequested' in ctx ? ctx.rematchRequested : false;
   const opponentWantsRematch = 'opponentWantsRematch' in ctx ? ctx.opponentWantsRematch : false;
 
-  if (state.status !== 'checkmate' && state.status !== 'stalemate') {
+  if (state.status !== 'checkmate' && state.status !== 'stalemate' && state.status !== 'draw') {
     return null;
   }
 
@@ -31,6 +31,8 @@ export function GameOverDialog() {
         <p className="game-over-result">
           {state.status === 'checkmate'
             ? `Checkmate! ${state.winner === 'white' ? 'White' : 'Black'} wins!`
+            : state.status === 'draw'
+            ? 'Draw — Threefold Repetition'
             : 'Stalemate — Draw'}
         </p>
         <button

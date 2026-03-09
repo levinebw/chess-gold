@@ -33,6 +33,8 @@ export interface GameState {
 
   actionHistory: GameAction[];
 
+  positionHistory: string[];
+
   modeConfig: GameModeConfig;
 }
 

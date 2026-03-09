@@ -48,7 +48,7 @@ function playerCount(room: Room): number {
 }
 
 function roomStatus(room: Room): RoomInfo['status'] {
-  if (room.state.status === 'checkmate' || room.state.status === 'stalemate') return 'finished';
+  if (room.state.status === 'checkmate' || room.state.status === 'stalemate' || room.state.status === 'draw') return 'finished';
   if (!room.white || !room.black) return 'waiting';
   return 'playing';
 }
