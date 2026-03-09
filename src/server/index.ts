@@ -130,6 +130,8 @@ io.on('connection', (socket) => {
 
     socket.join(roomId);
     callback({ roomId, color, state: room.state });
+    // Emit game-state to all players so they get the correct mode/state
+    io.to(roomId).emit('game-state', room.state);
     console.log(`${socket.id} joined room ${roomId} as ${color}`);
   });
 
