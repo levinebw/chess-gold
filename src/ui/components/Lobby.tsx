@@ -72,21 +72,14 @@ export function Lobby({ onLocalGame, onJoinedRoom }: Props) {
     const socket = socketRef.current;
     if (!socket || !waitingRoomId) return;
 
-    const handleJoined = () => {
-      handedOffRef.current = true;
-      onJoinedRoom(waitingRoomId, 'white', socket);
-    };
-
     const handleGameState = (serverState: GameState) => {
       handedOffRef.current = true;
       onJoinedRoom(waitingRoomId, 'white', socket, serverState);
     };
 
-    socket.on('player-joined', handleJoined);
     socket.on('game-state', handleGameState);
 
     return () => {
-      socket.off('player-joined', handleJoined);
       socket.off('game-state', handleGameState);
     };
   }, [waitingRoomId, onJoinedRoom]);
