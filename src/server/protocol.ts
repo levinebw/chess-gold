@@ -1,8 +1,16 @@
 import type { GameState, GameAction, GameError, Color, GameModeConfig } from '../engine/index.ts';
 
+// --- Authentication ---
+
+export interface AuthResponse {
+  sessionId: string;
+  token: string;
+}
+
 // --- Client → Server events ---
 
 export interface ClientEvents {
+  'authenticate': (sessionId: string | null, token: string | null, callback: (res: AuthResponse) => void) => void;
   'create-room': (opts: CreateRoomOpts, callback: (res: CreateRoomResponse) => void) => void;
   'join-room': (roomId: string, callback: (res: JoinRoomResponse) => void) => void;
   'action': (roomId: string, action: GameAction) => void;

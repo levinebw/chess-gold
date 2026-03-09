@@ -5,9 +5,27 @@ import { createInitialState } from '../../engine/game.ts';
 import { getLegalMoves } from '../../engine/position.ts';
 import { getValidPlacementSquares } from '../../engine/placement.ts';
 import { CHESS_GOLD_CONFIG } from '../../engine/config.ts';
-import type { ClientEvents, ServerEvents } from '../../server/protocol.ts';
+import type { ClientEvents, ServerEvents, AuthResponse } from '../../server/protocol.ts';
 
 type TypedSocket = Socket<ServerEvents, ClientEvents>;
+
+// Module-level session store shared with Lobby.tsx
+// These are re-exported so Lobby can set them and useOnlineGame can read them
+// We import from Lobby indirectly — but since both files are in the same bundle
+// and we use module-level variables, we need a shared store.
+// For simplicity, we duplicate the refs here and sync via a getter/setter pattern.
+// In practice, Lobby.tsx sets these before handing off to useOnlineGame.
+let _sessionId: string | null = null;
+let _sessionToken: string | null = null;
+
+export function setSessionCredentials(sessionId: string, token: string): void {
+  _sessionId = sessionId;
+  _sessionToken = token;
+}
+
+export function getSessionCredentials(): { sessionId: string | null; token: string | null } {
+  return { sessionId: _sessionId, token: _sessionToken };
+}
 
 export type OnlineStatus =
   | 'connecting'
@@ -82,12 +100,18 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
     };
 
     const onReconnect = () => {
-      // Re-join room to restore server-side socket mapping
-      socket.emit('join-room', roomId, (res: { state?: GameState; error?: string }) => {
-        if (res.state) {
-          setState(res.state);
-          setOnlineStatus('playing');
-        }
+      // Re-authenticate first, then re-join room
+      const creds = getSessionCredentials();
+      socket.emit('authenticate', creds.sessionId, creds.token, (authRes: AuthResponse) => {
+        // Update stored credentials (may be the same or a new session)
+        setSessionCredentials(authRes.sessionId, authRes.token);
+        // Re-join room to restore server-side socket mapping
+        socket.emit('join-room', roomId, (res: { state?: GameState; error?: string }) => {
+          if (res.state) {
+            setState(res.state);
+            setOnlineStatus('playing');
+          }
+        });
       });
     };
 

@@ -1,7 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import { createServer } from 'node:http';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, createHmac, timingSafeEqual } from 'node:crypto';
 import { Server } from 'socket.io';
 import { createInitialState, applyAction } from '../engine/index.ts';
 import type { GameState, GameError, Color } from '../engine/index.ts';
@@ -20,12 +20,68 @@ const io = new Server<ClientEvents, ServerEvents>(httpServer, {
   },
 });
 
+// --- Session management ---
+
+interface PlayerSession {
+  sessionId: string;
+  token: string;
+  socketId: string | null;
+  roomId: string | null;
+  color: Color | null;
+  createdAt: number;
+  lastSeen: number;
+}
+
+const sessions = new Map<string, PlayerSession>();
+
+const SERVER_SECRET = randomBytes(32);
+
+const SESSION_IDLE_EXPIRY_MS = 60 * 60 * 1000; // 1 hour (not in a room)
+const SESSION_ABSOLUTE_EXPIRY_MS = 4 * 60 * 60 * 1000; // 4 hours
+
+function createSessionToken(sessionId: string): string {
+  return createHmac('sha256', SERVER_SECRET).update(sessionId).digest('hex');
+}
+
+function verifySessionToken(sessionId: string, token: string): boolean {
+  const expected = createHmac('sha256', SERVER_SECRET).update(sessionId).digest('hex');
+  try {
+    return timingSafeEqual(Buffer.from(token), Buffer.from(expected));
+  } catch {
+    return false; // different lengths → invalid
+  }
+}
+
+function createSession(socketId: string): PlayerSession {
+  const sessionId = randomBytes(16).toString('hex');
+  const token = createSessionToken(sessionId);
+  const now = Date.now();
+  const session: PlayerSession = {
+    sessionId,
+    token,
+    socketId,
+    roomId: null,
+    color: null,
+    createdAt: now,
+    lastSeen: now,
+  };
+  sessions.set(sessionId, session);
+  return session;
+}
+
+function getSessionBySocketId(socketId: string): PlayerSession | undefined {
+  for (const session of sessions.values()) {
+    if (session.socketId === socketId) return session;
+  }
+  return undefined;
+}
+
 // --- Room state ---
 
 interface Room {
   id: string;
-  white: string | null;
-  black: string | null;
+  white: string | null;   // sessionId (not socket.id)
+  black: string | null;   // sessionId (not socket.id)
   state: GameState;
   startingGold: number;
   rematchRequested: Color | null;
@@ -44,9 +100,9 @@ function generateRoomId(): string {
   return randomBytes(4).toString('hex'); // 8 hex chars
 }
 
-function getPlayerColor(room: Room, socketId: string): Color | null {
-  if (room.white === socketId) return 'white';
-  if (room.black === socketId) return 'black';
+function getPlayerColor(room: Room, sessionId: string): Color | null {
+  if (room.white === sessionId) return 'white';
+  if (room.black === sessionId) return 'black';
   return null;
 }
 
@@ -80,6 +136,7 @@ interface RateLimitBucket {
 const rateLimits = new Map<string, Map<string, RateLimitBucket>>();
 
 const RATE_LIMITS: Record<string, { maxPerWindow: number; windowMs: number }> = {
+  'authenticate': { maxPerWindow: 10, windowMs: 60_000 },
   'create-room': { maxPerWindow: 5, windowMs: 60_000 },
   'join-room': { maxPerWindow: 10, windowMs: 60_000 },
   'action': { maxPerWindow: 60, windowMs: 60_000 },
@@ -123,6 +180,21 @@ setInterval(() => {
       console.log(`Expired empty room ${roomId}`);
     }
   }
+
+  // Clean up stale sessions
+  for (const [sessionId, session] of sessions) {
+    const age = now - session.createdAt;
+    const idle = now - session.lastSeen;
+    // Absolute expiry: 4 hours regardless
+    if (age > SESSION_ABSOLUTE_EXPIRY_MS) {
+      sessions.delete(sessionId);
+      console.log(`Expired session ${sessionId} (absolute age: ${Math.round(age / 60000)}m)`);
+    // Idle expiry: 1 hour if not in a room
+    } else if (idle > SESSION_IDLE_EXPIRY_MS && !session.roomId) {
+      sessions.delete(sessionId);
+      console.log(`Expired idle session ${sessionId}`);
+    }
+  }
 }, 60_000);
 
 // --- Socket.IO events ---
@@ -130,7 +202,84 @@ setInterval(() => {
 io.on('connection', (socket) => {
   console.log(`Connected: ${socket.id}`);
 
+  // --- Authentication ---
+
+  socket.on('authenticate', (sessionId, token, callback) => {
+    if (!checkRateLimit(socket.id, 'authenticate')) {
+      // Still issue a session even if rate-limited on auth — we don't want
+      // to leave the client in limbo. Rate limiting on auth is mostly to
+      // prevent brute-force token guessing.
+      const session = createSession(socket.id);
+      callback({ sessionId: session.sessionId, token: session.token });
+      return;
+    }
+
+    // Reconnection: client provides existing session credentials
+    if (sessionId && token) {
+      const existing = sessions.get(sessionId);
+      if (existing && verifySessionToken(sessionId, token)) {
+        // Valid session — rebind socket
+        existing.socketId = socket.id;
+        existing.lastSeen = Date.now();
+
+        // If the session was in a room, re-join the Socket.IO room
+        // so they receive broadcasts again
+        if (existing.roomId) {
+          const room = rooms.get(existing.roomId);
+          if (room) {
+            socket.join(existing.roomId);
+            const color = getPlayerColor(room, existing.sessionId);
+            if (color) {
+              // Clear any disconnect timer for this color
+              const timer = room.disconnectTimers.get(color);
+              if (timer) {
+                clearTimeout(timer);
+                room.disconnectTimers.delete(color);
+                io.to(existing.roomId).emit('player-reconnected', color);
+              }
+            }
+          } else {
+            // Room no longer exists — clear stale reference
+            existing.roomId = null;
+            existing.color = null;
+          }
+        }
+
+        console.log(`Session ${sessionId} re-authenticated (socket ${socket.id})`);
+        callback({ sessionId: existing.sessionId, token: existing.token });
+        return;
+      }
+      // Invalid token or session not found — fall through to create new session
+      console.log(`Invalid session credentials for ${sessionId}, issuing new session`);
+    }
+
+    // New session
+    const session = createSession(socket.id);
+    console.log(`New session ${session.sessionId} for socket ${socket.id}`);
+    callback({ sessionId: session.sessionId, token: session.token });
+  });
+
+  // --- Helper: require authentication ---
+
+  function requireSession(): PlayerSession | null {
+    const session = getSessionBySocketId(socket.id);
+    if (!session) {
+      console.log(`Unauthenticated event from socket ${socket.id}`);
+      return null;
+    }
+    session.lastSeen = Date.now();
+    return session;
+  }
+
+  // --- Room events ---
+
   socket.on('create-room', (opts, callback) => {
+    const session = requireSession();
+    if (!session) {
+      callback({ roomId: '', color: 'white', error: 'Not authenticated' });
+      return;
+    }
+
     if (!checkRateLimit(socket.id, 'create-room')) {
       callback({ roomId: '', color: 'white', error: 'Rate limited' });
       return;
@@ -151,7 +300,7 @@ io.on('connection', (socket) => {
     const modeConfig = validatedOpts?.modeConfig;
     const room: Room = {
       id: roomId,
-      white: socket.id,
+      white: session.sessionId,
       black: null,
       state: createInitialState(modeConfig, startingGold),
       startingGold,
@@ -160,12 +309,20 @@ io.on('connection', (socket) => {
       createdAt: Date.now(),
     };
     rooms.set(roomId, room);
+    session.roomId = roomId;
+    session.color = 'white';
     socket.join(roomId);
     callback({ roomId, color: 'white' });
-    console.log(`Room ${roomId} created by ${socket.id}`);
+    console.log(`Room ${roomId} created by session ${session.sessionId}`);
   });
 
   socket.on('join-room', (roomId, callback) => {
+    const session = requireSession();
+    if (!session) {
+      callback({ error: 'Not authenticated' });
+      return;
+    }
+
     if (!checkRateLimit(socket.id, 'join-room')) {
       callback({ error: 'Rate limited' });
       return;
@@ -183,16 +340,28 @@ io.on('connection', (socket) => {
       return;
     }
 
-    // Check if this is a reconnection (socket replacing a disconnected player)
-    // Reconnection is handled by the client sending join-room with the same roomId
+    // Check if this session is already in this room (reconnection via authenticate
+    // already handles re-joining, but the client may also call join-room after reconnect)
+    const existingColor = getPlayerColor(room, session.sessionId);
+    if (existingColor) {
+      // Already in this room — just re-join the Socket.IO room and return state
+      socket.join(validatedRoomId);
+      callback({ roomId: validatedRoomId, color: existingColor, state: room.state });
+      return;
+    }
+
+    // Check if room is full
     if (room.white && room.black) {
       callback({ error: 'Room is full' });
       return;
     }
 
     const color: Color = room.white ? 'black' : 'white';
-    if (color === 'white') room.white = socket.id;
-    else room.black = socket.id;
+    if (color === 'white') room.white = session.sessionId;
+    else room.black = session.sessionId;
+
+    session.roomId = validatedRoomId;
+    session.color = color;
 
     // Clear any disconnect timer for this color
     const timer = room.disconnectTimers.get(color);
@@ -208,10 +377,13 @@ io.on('connection', (socket) => {
     callback({ roomId: validatedRoomId, color, state: room.state });
     // Emit game-state to all players so they get the correct mode/state
     io.to(validatedRoomId).emit('game-state', room.state);
-    console.log(`${socket.id} joined room ${validatedRoomId} as ${color}`);
+    console.log(`Session ${session.sessionId} joined room ${validatedRoomId} as ${color}`);
   });
 
   socket.on('action', (roomId, action) => {
+    const session = requireSession();
+    if (!session) return;
+
     if (!checkRateLimit(socket.id, 'action')) {
       socket.emit('action-error', { type: 'error', code: 'INVALID_ACTION', message: 'Rate limited' } as GameError);
       return;
@@ -229,7 +401,7 @@ io.on('connection', (socket) => {
     const room = rooms.get(validatedRoomId);
     if (!room) return;
 
-    const color = getPlayerColor(room, socket.id);
+    const color = getPlayerColor(room, session.sessionId);
     if (!color) return;
     if (color !== room.state.turn) {
       socket.emit('action-error', { type: 'error', code: 'NOT_YOUR_TURN', message: 'Not your turn' });
@@ -252,6 +424,9 @@ io.on('connection', (socket) => {
   });
 
   socket.on('request-rematch', (roomId) => {
+    const session = requireSession();
+    if (!session) return;
+
     if (!checkRateLimit(socket.id, 'request-rematch')) return;
 
     const validatedRoomId = validateRoomId(roomId);
@@ -260,7 +435,7 @@ io.on('connection', (socket) => {
     const room = rooms.get(validatedRoomId);
     if (!room) return;
 
-    const color = getPlayerColor(room, socket.id);
+    const color = getPlayerColor(room, session.sessionId);
     if (!color) return;
 
     if (room.rematchRequested && room.rematchRequested !== color) {
@@ -275,6 +450,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('list-rooms', (callback) => {
+    // list-rooms does not require authentication — lobby browsing is open
     if (!checkRateLimit(socket.id, 'list-rooms')) {
       callback([]);
       return;
@@ -295,25 +471,49 @@ io.on('connection', (socket) => {
     // Clean up rate limit state
     rateLimits.delete(socket.id);
 
+    // Find session for this socket
+    const session = getSessionBySocketId(socket.id);
+    if (session) {
+      session.socketId = null;
+      session.lastSeen = Date.now();
+    }
+
+    // Find rooms this session was in and handle disconnect grace period
     for (const [roomId, room] of rooms) {
-      const color = getPlayerColor(room, socket.id);
+      // Look up by sessionId, not socket.id
+      const sessionId = session?.sessionId;
+      if (!sessionId) continue;
+
+      const color = getPlayerColor(room, sessionId);
       if (!color) continue;
 
-      // Clear the socket reference but keep the room alive for reconnection
-      if (color === 'white') room.white = null;
-      else room.black = null;
+      // NOTE: Do NOT clear the sessionId from the room slot.
+      // The session still "owns" that seat. We just mark the socket as gone
+      // (already done above by setting session.socketId = null).
 
       // Notify opponent
       io.to(roomId).emit('player-disconnected', color);
 
-      // Start grace period — if player doesn't reconnect, close the room
+      // Start grace period — if player doesn't reconnect, vacate the seat
       const timer = setTimeout(() => {
         room.disconnectTimers.delete(color);
-        // If still disconnected, close the room
-        if ((color === 'white' && !room.white) || (color === 'black' && !room.black)) {
+        // Check if the session is still disconnected (socketId still null)
+        const currentSession = sessions.get(sessionId);
+        const stillDisconnected = !currentSession || !currentSession.socketId;
+        if (stillDisconnected) {
+          // Vacate the room slot
+          if (color === 'white') room.white = null;
+          else room.black = null;
+
+          // Clear session's room reference
+          if (currentSession) {
+            currentSession.roomId = null;
+            currentSession.color = null;
+          }
+
           io.to(roomId).emit('room-closed', 'Opponent disconnected');
           rooms.delete(roomId);
-          console.log(`Room ${roomId} closed — ${color} did not reconnect`);
+          console.log(`Room ${roomId} closed — ${color} (session ${sessionId}) did not reconnect`);
         }
       }, DISCONNECT_GRACE_MS);
 

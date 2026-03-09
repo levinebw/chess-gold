@@ -3,9 +3,10 @@ import { io, Socket } from 'socket.io-client';
 import { GoldCoin } from './GoldCoin.tsx';
 import { MODE_PRESETS } from '../../engine/config.ts';
 import { BOT_PERSONAS } from '../../engine/bot/personas.ts';
+import { setSessionCredentials, getSessionCredentials } from '../hooks/useOnlineGame.ts';
 import type { BotPersona } from '../../engine/bot/types.ts';
 import type { Color, GameModeConfig, GameState } from '../../engine/types.ts';
-import type { ClientEvents, ServerEvents, RoomInfo } from '../../server/protocol.ts';
+import type { ClientEvents, ServerEvents, RoomInfo, AuthResponse } from '../../server/protocol.ts';
 
 type TypedSocket = Socket<ServerEvents, ClientEvents>;
 
@@ -57,8 +58,14 @@ export function Lobby({ onLocalGame, onBotGame, onJoinedRoom }: Props) {
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      socket.emit('list-rooms', (roomList) => {
-        setRooms(roomList);
+      // Authenticate (or re-authenticate) on every connect/reconnect
+      const creds = getSessionCredentials();
+      socket.emit('authenticate', creds.sessionId, creds.token, (res: AuthResponse) => {
+        setSessionCredentials(res.sessionId, res.token);
+        // After authentication, fetch room list
+        socket.emit('list-rooms', (roomList) => {
+          setRooms(roomList);
+        });
       });
     });
 
