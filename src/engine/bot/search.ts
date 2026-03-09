@@ -1,6 +1,6 @@
 import { parseFen } from 'chessops/fen';
 import type { Color } from 'chessops';
-import type { GameState, MoveAction, Square } from '../types.ts';
+import type { GameState, MoveAction } from '../types.ts';
 import { getLegalMoves } from '../position.ts';
 import { applyAction } from '../game.ts';
 import { evaluatePosition } from './evaluate.ts';
