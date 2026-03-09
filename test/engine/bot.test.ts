@@ -253,10 +253,11 @@ describe('strategy.ts', () => {
 describe('search.ts', () => {
   it('findCheckmateInOne returns a move when mate-in-one exists', () => {
     // Back-rank mate: White rook on a1, black king on g8 with pawns f7/g7/h7
-    // Ra1-a8# is checkmate
+    // Ra1-a8# is checkmate. Use Standard mode so placement can't escape.
     const state = createGameState({
       fen: '6k1/5ppp/8/8/8/8/8/R3K3 w - - 0 1',
       gold: { white: 5, black: 5 },
+      modeConfig: MODE_PRESETS['standard'],
     });
 
     const mateMove = findCheckmateInOne(state);
@@ -341,10 +342,11 @@ describe('bot.ts (integration)', () => {
   });
 
   it('chooseAction always takes checkmate-in-one when available', () => {
-    // Back-rank mate available
+    // Back-rank mate available. Use Standard mode so placement can't escape.
     const state = createGameState({
       fen: '6k1/5ppp/8/8/8/8/8/R3K3 w - - 0 1',
       gold: { white: 5, black: 5 },
+      modeConfig: MODE_PRESETS['standard'],
     });
 
     // Test with multiple personas — all should take mate-in-one

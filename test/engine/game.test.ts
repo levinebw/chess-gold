@@ -341,9 +341,11 @@ describe('Game Reducer', () => {
 
       // Back-rank mate: Kg8 boxed in by own pawns on f7/g7/h7.
       // Ra1-a8# delivers mate — rank 8 controlled, pawns block all escapes.
+      // Use Standard mode (no gold economy) so placement can't escape check.
       const state = createGameState({
         fen: '6k1/5ppp/8/8/8/8/8/R3K3 w - - 0 1',
         gold: { white: 5, black: 5 },
+        modeConfig: MODE_PRESETS['standard'],
       });
 
       const result = applyAction(state, {
@@ -389,6 +391,7 @@ describe('Game Reducer', () => {
       const state = createGameState({
         fen: '6k1/5ppp/8/8/8/8/8/R3K3 w - - 0 1',
         gold: { white: 5, black: 5 },
+        modeConfig: MODE_PRESETS['standard'],
       });
 
       const result = applyAction(state, {
@@ -498,8 +501,10 @@ describe('Game Reducer', () => {
       const state = createInitialState();
       const finalState = applyActions(state, actions, applyAction);
 
-      expect(finalState.status).toBe('checkmate');
-      expect(finalState.winner).toBe('white');
+      // In Chess Gold mode, this is NOT checkmate because black has gold to
+      // buy a piece and place it on rank 8 to block the rook.
+      expect(finalState.status).toBe('active');
+      expect(finalState.winner).toBeNull();
       expect(finalState.actionHistory.length).toBe(19);
     });
   });

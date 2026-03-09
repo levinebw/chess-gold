@@ -2,9 +2,29 @@ import { parseFen, makeFen } from 'chessops/fen';
 import type { GameState, GameAction, GameError, GameModeConfig } from './types.ts';
 import { CHESS_GOLD_CONFIG, MODE_PRESETS } from './config.ts';
 import { awardTurnIncome, canAffordPiece, deductPurchaseCost } from './gold.ts';
-import { isValidPlacement, placementResolvesCheck } from './placement.ts';
+import { isValidPlacement, placementResolvesCheck, getValidPlacementSquares } from './placement.ts';
 import { getLegalMoves, isInCheck, isCheckmate, isStalemate, applyMove } from './position.ts';
 import { checkAllConverted } from './win-conditions.ts';
+
+const PURCHASABLE_PIECES: Array<import('./types.ts').PurchasableRole> = ['pawn', 'knight', 'bishop', 'rook', 'queen'];
+
+/**
+ * Check if the player to move (who is in checkmate per chessops) can buy and
+ * place a piece that blocks the check. Accounts for turn income that will be
+ * awarded when their applyAction runs.
+ */
+function canPlacementEscapeCheck(state: GameState): boolean {
+  if (!state.modeConfig.goldEconomy) return false;
+
+  const goldAfterIncome = state.gold[state.turn] + CHESS_GOLD_CONFIG.goldPerTurn;
+
+  for (const piece of PURCHASABLE_PIECES) {
+    if (goldAfterIncome < CHESS_GOLD_CONFIG.piecePrices[piece]) continue;
+    const squares = getValidPlacementSquares(state, piece);
+    if (squares.length > 0) return true;
+  }
+  return false;
+}
 
 const KINGS_ONLY_FEN = '4k3/8/8/8/8/8/8/4K3 w - - 0 1';
 const STANDARD_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
@@ -131,7 +151,7 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
   // 6. Check game-over
   const winConditions = current.modeConfig.winConditions;
 
-  if (!current.modeConfig.noCheck && isCheckmate(current)) {
+  if (!current.modeConfig.noCheck && isCheckmate(current) && !canPlacementEscapeCheck(current)) {
     current = {
       ...current,
       status: 'checkmate',
