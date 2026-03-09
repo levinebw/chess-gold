@@ -170,7 +170,7 @@ io.on('connection', (socket) => {
 
     if (room.rematchRequested && room.rematchRequested !== color) {
       // Both players have requested — start new game
-      room.state = createInitialState(undefined, room.startingGold);
+      room.state = createInitialState(room.state.modeConfig, room.startingGold);
       room.rematchRequested = null;
       io.to(roomId).emit('rematch-accepted', room.state);
     } else {
