@@ -8,7 +8,6 @@ import { ActionHistory } from './components/ActionHistory.tsx';
 import { GameOverDialog } from './components/GameOverDialog.tsx';
 import { RulesDialog } from './components/RulesDialog.tsx';
 import { Lobby } from './components/Lobby.tsx';
-import { ModeSelector } from './components/ModeSelector.tsx';
 import { OnlineStatusBar } from './components/OnlineGameView.tsx';
 import { useGameContext } from './context/GameContext.tsx';
 import { useOnlineGame } from './hooks/useOnlineGame.ts';
@@ -22,12 +21,11 @@ import '../styles/main.css';
 const STARTING_GOLD_OPTIONS = [1, 3, 5, 10, 100];
 
 type AppScreen =
-  | { type: 'mode-select' }
-  | { type: 'lobby'; modeConfig: GameModeConfig }
+  | { type: 'lobby' }
   | { type: 'local'; modeConfig: GameModeConfig }
-  | { type: 'online'; modeConfig: GameModeConfig; roomId: string; color: Color; socket: Socket<ServerEvents, ClientEvents> };
+  | { type: 'online'; roomId: string; color: Color; socket: Socket<ServerEvents, ClientEvents> };
 
-function GameView({ isOnline, onLeave, onBackToMenu }: { isOnline: boolean; onLeave?: () => void; onBackToMenu?: () => void }) {
+function GameView({ isOnline, onLeave }: { isOnline: boolean; onLeave?: () => void }) {
   const { undo, canUndo, resetGame, startingGold, setStartingGold, state, flipBoard } = useGameContext();
   const [showRules, setShowRules] = useState(false);
   const [muted, setMutedState] = useState(isMuted);
@@ -97,9 +95,6 @@ function GameView({ isOnline, onLeave, onBackToMenu }: { isOnline: boolean; onLe
       </div>
       <GameOverDialog />
       {showRules && <RulesDialog onClose={() => setShowRules(false)} />}
-      {!isOnline && onBackToMenu && (
-        <button className="back-to-lobby" onClick={onBackToMenu}>← Change Mode</button>
-      )}
     </div>
   );
 }
@@ -114,37 +109,14 @@ function OnlineGameWrapper({ roomId, color, socket, onLeave }: { roomId: string;
 }
 
 export default function App() {
-  const [screen, setScreen] = useState<AppScreen>({ type: 'mode-select' });
+  const [screen, setScreen] = useState<AppScreen>({ type: 'lobby' });
 
-  const handleModeSelect = useCallback((_key: string, config: GameModeConfig) => {
-    setScreen({ type: 'lobby', modeConfig: config });
-  }, []);
-
-  const handleBackToMenu = useCallback(() => {
-    setScreen(prev => {
-      if (prev.type === 'online') {
-        prev.socket.disconnect();
-      }
-      return { type: 'mode-select' };
-    });
-  }, []);
-
-  const handleLocalGame = useCallback(() => {
-    setScreen(prev => {
-      if (prev.type === 'lobby') {
-        return { type: 'local', modeConfig: prev.modeConfig };
-      }
-      return prev;
-    });
+  const handleLocalGame = useCallback((modeConfig: GameModeConfig) => {
+    setScreen({ type: 'local', modeConfig });
   }, []);
 
   const handleJoinedRoom = useCallback((roomId: string, color: Color, _socket: Socket<ServerEvents, ClientEvents>) => {
-    setScreen(prev => {
-      if (prev.type === 'lobby') {
-        return { type: 'online', modeConfig: prev.modeConfig, roomId, color, socket: _socket };
-      }
-      return prev;
-    });
+    setScreen({ type: 'online', roomId, color, socket: _socket });
   }, []);
 
   const handleLeave = useCallback(() => {
@@ -152,26 +124,12 @@ export default function App() {
       if (prev.type === 'online') {
         prev.socket.disconnect();
       }
-      if (prev.type === 'online' || prev.type === 'local') {
-        return { type: 'lobby', modeConfig: prev.modeConfig };
-      }
-      return { type: 'mode-select' };
+      return { type: 'lobby' };
     });
   }, []);
 
-  if (screen.type === 'mode-select') {
-    return <ModeSelector onSelectMode={handleModeSelect} />;
-  }
-
   if (screen.type === 'lobby') {
-    return (
-      <Lobby
-        onLocalGame={handleLocalGame}
-        onJoinedRoom={handleJoinedRoom}
-        onBackToMenu={handleBackToMenu}
-        modeConfig={screen.modeConfig}
-      />
-    );
+    return <Lobby onLocalGame={handleLocalGame} onJoinedRoom={handleJoinedRoom} />;
   }
 
   if (screen.type === 'online') {
@@ -188,7 +146,8 @@ export default function App() {
   // Local game
   return (
     <GameProvider modeConfig={screen.modeConfig}>
-      <GameView isOnline={false} onLeave={handleLeave} onBackToMenu={handleBackToMenu} />
+      <GameView isOnline={false} onLeave={handleLeave} />
+      <button className="back-to-lobby" onClick={handleLeave}>← Back to Lobby</button>
     </GameProvider>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { GoldCoin } from './GoldCoin.tsx';
+import { MODE_PRESETS } from '../../engine/config.ts';
 import type { Color, GameModeConfig } from '../../engine/types.ts';
 import type { ClientEvents, ServerEvents, RoomInfo } from '../../server/protocol.ts';
 
@@ -10,15 +11,32 @@ const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? 'http://localhost:3001';
 
 const STARTING_GOLD_OPTIONS = [1, 3, 5, 10, 100];
 
+const AVAILABLE_MODES = [
+  {
+    key: 'chess-gold',
+    description: 'Start with a king and gold. Buy pieces from the shop.',
+    icon: '♛',
+  },
+  {
+    key: 'standard',
+    description: 'Classic chess with standard starting positions.',
+    icon: '♔',
+  },
+  {
+    key: 'conqueror',
+    description: 'Captured pieces switch sides. Convert all pieces to win.',
+    icon: '⚔',
+  },
+] as const;
+
 interface Props {
-  onLocalGame: () => void;
+  onLocalGame: (modeConfig: GameModeConfig) => void;
   onJoinedRoom: (roomId: string, color: Color, socket: TypedSocket) => void;
-  onBackToMenu?: () => void;
-  modeConfig?: GameModeConfig;
 }
 
-export function Lobby({ onLocalGame, onJoinedRoom, onBackToMenu, modeConfig }: Props) {
+export function Lobby({ onLocalGame, onJoinedRoom }: Props) {
   const [joinCode, setJoinCode] = useState('');
+  const [selectedMode, setSelectedMode] = useState<string>('chess-gold');
   const [startingGold, setStartingGold] = useState(3);
   const [status, setStatus] = useState<'idle' | 'connecting' | 'waiting' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -26,6 +44,9 @@ export function Lobby({ onLocalGame, onJoinedRoom, onBackToMenu, modeConfig }: P
   const [rooms, setRooms] = useState<RoomInfo[]>([]);
   const socketRef = useRef<TypedSocket | null>(null);
   const handedOffRef = useRef(false);
+
+  const modeConfig = MODE_PRESETS[selectedMode];
+  const showEconomy = modeConfig.goldEconomy;
 
   // Fetch open rooms on mount
   useEffect(() => {
@@ -114,6 +135,7 @@ export function Lobby({ onLocalGame, onJoinedRoom, onBackToMenu, modeConfig }: P
         <h1>Chess Gold</h1>
         <div className="lobby-waiting">
           <p>Waiting for opponent...</p>
+          <p className="lobby-hint">{modeConfig.name}</p>
           <div className="room-code-display">
             <span className="room-code-label">Room Code</span>
             <span className="room-code-value">{waitingRoomId}</span>
@@ -131,25 +153,41 @@ export function Lobby({ onLocalGame, onJoinedRoom, onBackToMenu, modeConfig }: P
     );
   }
 
-  const showEconomy = modeConfig?.goldEconomy !== false;
-
   return (
     <div className="lobby">
-      <h1>{modeConfig?.name ?? 'Chess Gold'}</h1>
-      {onBackToMenu && (
-        <button className="lobby-button secondary lobby-back-to-menu" onClick={onBackToMenu}>
-          ← Change Mode
-        </button>
-      )}
+      <h1>Chess Gold</h1>
 
+      {/* Mode Selection */}
       <div className="lobby-section">
-        <button className="lobby-button primary" onClick={onLocalGame}>
+        <h2>Game Mode</h2>
+        <div className="lobby-mode-cards">
+          {AVAILABLE_MODES.map(({ key, description, icon }) => {
+            const config = MODE_PRESETS[key];
+            return (
+              <button
+                key={key}
+                className={`lobby-mode-card${selectedMode === key ? ' selected' : ''}`}
+                onClick={() => setSelectedMode(key)}
+              >
+                <span className="lobby-mode-icon">{icon}</span>
+                <span className="lobby-mode-name">{config.name}</span>
+                <span className="lobby-mode-desc">{description}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Local Game */}
+      <div className="lobby-section">
+        <button className="lobby-button primary" onClick={() => onLocalGame(modeConfig)}>
           Local Game (Pass &amp; Play)
         </button>
       </div>
 
       <div className="lobby-divider">or play online</div>
 
+      {/* Create Room */}
       <div className="lobby-section">
         <h2>Create Room</h2>
         <div className="lobby-create">
@@ -173,6 +211,7 @@ export function Lobby({ onLocalGame, onJoinedRoom, onBackToMenu, modeConfig }: P
         </div>
       </div>
 
+      {/* Join Room */}
       <div className="lobby-section">
         <h2>Join Room</h2>
         <div className="lobby-join">
@@ -194,6 +233,7 @@ export function Lobby({ onLocalGame, onJoinedRoom, onBackToMenu, modeConfig }: P
         </div>
       </div>
 
+      {/* Open Rooms */}
       {rooms.length > 0 && (
         <div className="lobby-section">
           <h2>
@@ -208,7 +248,10 @@ export function Lobby({ onLocalGame, onJoinedRoom, onBackToMenu, modeConfig }: P
                 onClick={() => joinRoom(room.id)}
               >
                 <span className="room-id">{room.id}</span>
-                <span className="room-gold">{room.startingGold}<GoldCoin size={14}/></span>
+                <span className="room-mode">{room.modeName}</span>
+                {room.startingGold > 0 && (
+                  <span className="room-gold">{room.startingGold}<GoldCoin size={14}/></span>
+                )}
                 <span className="room-players">{room.players}/2</span>
               </button>
             ))}
