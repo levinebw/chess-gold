@@ -619,6 +619,10 @@ body {
   .turn-indicator {
     align-items: flex-start;
   }
+
+  .game-content.no-economy .board-wrapper {
+    width: min(480px, calc(100vw - 2rem));
+  }
 }
 
 /* Error */

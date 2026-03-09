@@ -9,67 +9,56 @@ import type { BotPersona, EvaluationScore } from './types.ts';
 /** Maximum quiescence depth to avoid infinite capture chains. */
 const MAX_QUIESCENCE_DEPTH = 3;
 
-/**
- * Check if a move is a capture by inspecting the board.
- */
-function isCapture(state: GameState, from: Square, to: Square): boolean {
-  const setup = parseFen(state.fen);
-  if (setup.isErr) return false;
+/** Default time budget for move search (ms). */
+const DEFAULT_TIME_BUDGET_MS = 2000;
 
-  const target = setup.value.board.get(to);
-  if (target && target.color !== state.turn) return true;
-
-  // Check en passant
-  const piece = setup.value.board.get(from);
-  if (piece?.role === 'pawn' && to === setup.value.epSquare) return true;
-
-  return false;
+interface TaggedMove {
+  action: MoveAction;
+  isCapture: boolean;
 }
 
 /**
- * Check if a pawn move reaches the last rank (promotion needed).
+ * Generate all legal move actions with capture/promotion tagging.
+ * Parses FEN once instead of per-move.
  */
-function isPromotionMove(state: GameState, from: Square, to: Square): boolean {
-  const setup = parseFen(state.fen);
-  if (setup.isErr) return false;
-
-  const piece = setup.value.board.get(from);
-  if (!piece || piece.role !== 'pawn') return false;
-
-  const toRank = Math.floor(to / 8);
-  return (piece.color === 'white' && toRank === 7) || (piece.color === 'black' && toRank === 0);
-}
-
-/**
- * Generate all legal move actions for the current position.
- * Handles promotion by generating queen promotion (strongest default).
- */
-function generateMoveActions(state: GameState): MoveAction[] {
+function generateTaggedMoves(state: GameState): TaggedMove[] {
   const legalMoves = getLegalMoves(state);
-  const actions: MoveAction[] = [];
+  const setup = parseFen(state.fen);
+  if (setup.isErr) return [];
+
+  const board = setup.value.board;
+  const epSquare = setup.value.epSquare;
+  const moves: TaggedMove[] = [];
 
   for (const [from, destinations] of legalMoves) {
+    const piece = board.get(from);
+    const isPawn = piece?.role === 'pawn';
+
     for (const to of destinations) {
-      if (isPromotionMove(state, from, to)) {
-        // For search, always consider queen promotion (dominant choice)
-        // We only add queen here for simplicity; the bot almost never
-        // wants to underpromote
-        actions.push({ type: 'move', from, to, promotion: 'queen' });
-      } else {
-        actions.push({ type: 'move', from, to });
-      }
+      // Promotion: pawn reaching last rank
+      const isPromotion = isPawn &&
+        ((piece!.color === 'white' && Math.floor(to / 8) === 7) ||
+         (piece!.color === 'black' && Math.floor(to / 8) === 0));
+
+      // Capture: opponent piece on target, or en passant
+      const target = board.get(to);
+      const isCapture = (target !== undefined && target.color !== state.turn) ||
+        (isPawn === true && to === epSquare);
+
+      const action: MoveAction = isPromotion
+        ? { type: 'move', from, to, promotion: 'queen' }
+        : { type: 'move', from, to };
+
+      moves.push({ action, isCapture });
     }
   }
 
-  return actions;
+  return moves;
 }
 
 /**
  * Quiescence search: keep searching captures only until the position is quiet.
- * This prevents horizon effects where a piece hangs right after the search depth.
- *
  * Uses minimax convention: always evaluates from botColor's perspective.
- * `maximizing` indicates whether the side to move is the bot (true) or opponent (false).
  */
 function quiescence(
   state: GameState,
@@ -79,10 +68,11 @@ function quiescence(
   beta: number,
   depth: number,
   maximizing: boolean,
+  deadline: number,
 ): EvaluationScore {
   const standPat = evaluatePosition(state, botColor, persona);
 
-  if (depth >= MAX_QUIESCENCE_DEPTH) return standPat;
+  if (depth >= MAX_QUIESCENCE_DEPTH || Date.now() > deadline) return standPat;
 
   // Terminal states
   if (state.status === 'checkmate' || state.status === 'stalemate' || state.status === 'draw') {
@@ -90,26 +80,22 @@ function quiescence(
   }
 
   // Only search captures
-  const moveActions = generateMoveActions(state);
-  const captures = moveActions.filter(m => isCapture(state, m.from, m.to));
+  const taggedMoves = generateTaggedMoves(state);
+  const captures = taggedMoves.filter(m => m.isCapture);
 
   if (maximizing) {
     let currentAlpha = alpha;
     if (standPat >= beta) return beta;
     if (standPat > currentAlpha) currentAlpha = standPat;
 
-    for (const action of captures) {
+    for (const { action } of captures) {
+      if (Date.now() > deadline) break;
       const result = applyAction(state, action);
       if ('type' in result && result.type === 'error') continue;
 
       const score = quiescence(
-        result as GameState,
-        botColor,
-        persona,
-        currentAlpha,
-        beta,
-        depth + 1,
-        false,
+        result as GameState, botColor, persona,
+        currentAlpha, beta, depth + 1, false, deadline,
       );
 
       if (score >= beta) return beta;
@@ -122,18 +108,14 @@ function quiescence(
     if (standPat <= alpha) return alpha;
     if (standPat < currentBeta) currentBeta = standPat;
 
-    for (const action of captures) {
+    for (const { action } of captures) {
+      if (Date.now() > deadline) break;
       const result = applyAction(state, action);
       if ('type' in result && result.type === 'error') continue;
 
       const score = quiescence(
-        result as GameState,
-        botColor,
-        persona,
-        alpha,
-        currentBeta,
-        depth + 1,
-        true,
+        result as GameState, botColor, persona,
+        alpha, currentBeta, depth + 1, true, deadline,
       );
 
       if (score <= alpha) return alpha;
@@ -145,10 +127,7 @@ function quiescence(
 }
 
 /**
- * Minimax search with alpha-beta pruning.
- *
- * At depth 0, drops into quiescence search.
- * `maximizing` is true when it's the bot's turn to move.
+ * Minimax search with alpha-beta pruning and time budget.
  */
 function minimax(
   state: GameState,
@@ -158,68 +137,57 @@ function minimax(
   alpha: number,
   beta: number,
   maximizing: boolean,
+  deadline: number,
 ): EvaluationScore {
   // Terminal states
   if (state.status === 'checkmate' || state.status === 'stalemate' || state.status === 'draw') {
     return evaluatePosition(state, botColor, persona);
   }
 
-  if (depth === 0) {
-    return quiescence(state, botColor, persona, alpha, beta, 0, maximizing);
+  if (depth === 0 || Date.now() > deadline) {
+    return quiescence(state, botColor, persona, alpha, beta, 0, maximizing, deadline);
   }
 
-  const moveActions = generateMoveActions(state);
-  if (moveActions.length === 0) {
+  const taggedMoves = generateTaggedMoves(state);
+  if (taggedMoves.length === 0) {
     return evaluatePosition(state, botColor, persona);
   }
 
   // Move ordering: captures first for better pruning
-  moveActions.sort((a, b) => {
-    const aCapture = isCapture(state, a.from, a.to) ? 1 : 0;
-    const bCapture = isCapture(state, b.from, b.to) ? 1 : 0;
-    return bCapture - aCapture;
-  });
+  taggedMoves.sort((a, b) => (b.isCapture ? 1 : 0) - (a.isCapture ? 1 : 0));
 
   if (maximizing) {
     let maxEval = -Infinity;
-    for (const action of moveActions) {
+    for (const { action } of taggedMoves) {
+      if (Date.now() > deadline) break;
       const result = applyAction(state, action);
       if ('type' in result && result.type === 'error') continue;
 
       const evalScore = minimax(
-        result as GameState,
-        botColor,
-        persona,
-        depth - 1,
-        alpha,
-        beta,
-        false,
+        result as GameState, botColor, persona,
+        depth - 1, alpha, beta, false, deadline,
       );
 
       maxEval = Math.max(maxEval, evalScore);
       alpha = Math.max(alpha, evalScore);
-      if (beta <= alpha) break; // prune
+      if (beta <= alpha) break;
     }
     return maxEval;
   } else {
     let minEval = Infinity;
-    for (const action of moveActions) {
+    for (const { action } of taggedMoves) {
+      if (Date.now() > deadline) break;
       const result = applyAction(state, action);
       if ('type' in result && result.type === 'error') continue;
 
       const evalScore = minimax(
-        result as GameState,
-        botColor,
-        persona,
-        depth - 1,
-        alpha,
-        beta,
-        true,
+        result as GameState, botColor, persona,
+        depth - 1, alpha, beta, true, deadline,
       );
 
       minEval = Math.min(minEval, evalScore);
       beta = Math.min(beta, evalScore);
-      if (beta <= alpha) break; // prune
+      if (beta <= alpha) break;
     }
     return minEval;
   }
@@ -233,27 +201,25 @@ function scoreMoveAction(
   action: MoveAction,
   botColor: Color,
   persona: BotPersona,
+  deadline: number,
 ): EvaluationScore {
   const result = applyAction(state, action);
   if ('type' in result && result.type === 'error') return -Infinity;
 
   const nextState = result as GameState;
 
-  if (persona.searchDepth <= 1) {
-    // Depth 1: just evaluate the resulting position + quiescence
-    // After bot's move, opponent moves next (minimizing)
-    return quiescence(nextState, botColor, persona, -Infinity, Infinity, 0, false);
+  // Immediate checkmate = maximum score
+  if (nextState.status === 'checkmate' && nextState.winner === botColor) {
+    return 10000;
   }
 
-  // Depth 2+: run minimax from the opponent's perspective
+  if (persona.searchDepth <= 1) {
+    return quiescence(nextState, botColor, persona, -Infinity, Infinity, 0, false, deadline);
+  }
+
   return minimax(
-    nextState,
-    botColor,
-    persona,
-    persona.searchDepth - 1,
-    -Infinity,
-    Infinity,
-    false, // opponent moves next
+    nextState, botColor, persona,
+    persona.searchDepth - 1, -Infinity, Infinity, false, deadline,
   );
 }
 
@@ -264,27 +230,42 @@ export interface ScoredAction {
 
 /**
  * Find the best move for the current position.
- *
- * Returns all legal moves scored and sorted (best first).
- * Caller applies randomness.
+ * Returns scored moves sorted best-first.
+ * Integrates mate-in-one detection (no separate pass needed).
+ * Stops early if time budget is exceeded.
  */
 export function findBestMoves(
   state: GameState,
   persona: BotPersona,
+  timeBudgetMs: number = DEFAULT_TIME_BUDGET_MS,
 ): ScoredAction[] {
+  const deadline = Date.now() + timeBudgetMs;
   const botColor = state.turn;
-  const moveActions = generateMoveActions(state);
+  const taggedMoves = generateTaggedMoves(state);
 
-  if (moveActions.length === 0) return [];
+  if (taggedMoves.length === 0) return [];
 
-  const scored: ScoredAction[] = moveActions.map(action => ({
-    action,
-    score: scoreMoveAction(state, action, botColor, persona),
-  }));
+  // Evaluate captures first — more likely to be good moves, and ensures
+  // the most impactful moves are scored even if time runs out
+  taggedMoves.sort((a, b) => (b.isCapture ? 1 : 0) - (a.isCapture ? 1 : 0));
 
-  // Sort descending by score (best first)
+  const scored: ScoredAction[] = [];
+
+  for (const { action } of taggedMoves) {
+    const score = scoreMoveAction(state, action, botColor, persona, deadline);
+
+    // Mate-in-one: return immediately
+    if (score >= 9999) {
+      return [{ action, score }];
+    }
+
+    scored.push({ action, score });
+
+    // Check time budget after each top-level move evaluation
+    if (Date.now() > deadline) break;
+  }
+
   scored.sort((a, b) => b.score - a.score);
-
   return scored;
 }
 
@@ -293,9 +274,9 @@ export function findBestMoves(
  * Returns the mating move if found, otherwise null.
  */
 export function findCheckmateInOne(state: GameState): MoveAction | null {
-  const moveActions = generateMoveActions(state);
+  const taggedMoves = generateTaggedMoves(state);
 
-  for (const action of moveActions) {
+  for (const { action } of taggedMoves) {
     const result = applyAction(state, action);
     if ('type' in result && result.type === 'error') continue;
 

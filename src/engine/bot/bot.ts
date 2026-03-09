@@ -1,6 +1,6 @@
 import type { GameState, GameAction, PlaceAction, MoveAction } from '../types.ts';
 import type { BotPersona } from './types.ts';
-import { findBestMoves, findCheckmateInOne } from './search.ts';
+import { findBestMoves } from './search.ts';
 import type { ScoredAction } from './search.ts';
 import { decideSpending } from './strategy.ts';
 import { evaluatePosition } from './evaluate.ts';
@@ -52,15 +52,14 @@ function applyRandomness(
 export function chooseAction(state: GameState, persona: BotPersona): GameAction {
   const botColor = state.turn;
 
-  // --- 1. Checkmate in one: always take it ---
-  const mateMove = findCheckmateInOne(state);
-  if (mateMove) {
-    return mateMove;
-  }
-
-  // --- 2. Evaluate spending vs moving ---
+  // --- 1. Evaluate spending vs moving ---
   const spending = decideSpending(state, persona);
   const bestMoves = findBestMoves(state, persona);
+
+  // --- 2. Checkmate in one: always take it (detected by findBestMoves) ---
+  if (bestMoves.length > 0 && bestMoves[0].score >= 9999) {
+    return bestMoves[0].action;
+  }
 
   // If there are no legal moves, we must try to place a piece
   if (bestMoves.length === 0) {
