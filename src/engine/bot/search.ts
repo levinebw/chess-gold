@@ -67,16 +67,20 @@ function generateMoveActions(state: GameState): MoveAction[] {
 /**
  * Quiescence search: keep searching captures only until the position is quiet.
  * This prevents horizon effects where a piece hangs right after the search depth.
+ *
+ * Uses minimax convention: always evaluates from botColor's perspective.
+ * `maximizing` indicates whether the side to move is the bot (true) or opponent (false).
  */
 function quiescence(
   state: GameState,
-  color: Color,
+  botColor: Color,
   persona: BotPersona,
   alpha: number,
   beta: number,
   depth: number,
+  maximizing: boolean,
 ): EvaluationScore {
-  const standPat = evaluatePosition(state, color, persona);
+  const standPat = evaluatePosition(state, botColor, persona);
 
   if (depth >= MAX_QUIESCENCE_DEPTH) return standPat;
 
@@ -85,32 +89,59 @@ function quiescence(
     return standPat;
   }
 
-  let currentAlpha = alpha;
-  if (standPat >= beta) return beta;
-  if (standPat > currentAlpha) currentAlpha = standPat;
-
   // Only search captures
   const moveActions = generateMoveActions(state);
   const captures = moveActions.filter(m => isCapture(state, m.from, m.to));
 
-  for (const action of captures) {
-    const result = applyAction(state, action);
-    if ('type' in result && result.type === 'error') continue;
+  if (maximizing) {
+    let currentAlpha = alpha;
+    if (standPat >= beta) return beta;
+    if (standPat > currentAlpha) currentAlpha = standPat;
 
-    const score = -quiescence(
-      result as GameState,
-      color === 'white' ? 'black' : 'white',
-      persona,
-      -beta,
-      -currentAlpha,
-      depth + 1,
-    );
+    for (const action of captures) {
+      const result = applyAction(state, action);
+      if ('type' in result && result.type === 'error') continue;
 
-    if (score >= beta) return beta;
-    if (score > currentAlpha) currentAlpha = score;
+      const score = quiescence(
+        result as GameState,
+        botColor,
+        persona,
+        currentAlpha,
+        beta,
+        depth + 1,
+        false,
+      );
+
+      if (score >= beta) return beta;
+      if (score > currentAlpha) currentAlpha = score;
+    }
+
+    return currentAlpha;
+  } else {
+    let currentBeta = beta;
+    if (standPat <= alpha) return alpha;
+    if (standPat < currentBeta) currentBeta = standPat;
+
+    for (const action of captures) {
+      const result = applyAction(state, action);
+      if ('type' in result && result.type === 'error') continue;
+
+      const score = quiescence(
+        result as GameState,
+        botColor,
+        persona,
+        alpha,
+        currentBeta,
+        depth + 1,
+        true,
+      );
+
+      if (score <= alpha) return alpha;
+      if (score < currentBeta) currentBeta = score;
+    }
+
+    return currentBeta;
   }
-
-  return currentAlpha;
 }
 
 /**
@@ -134,7 +165,7 @@ function minimax(
   }
 
   if (depth === 0) {
-    return quiescence(state, botColor, persona, alpha, beta, 0);
+    return quiescence(state, botColor, persona, alpha, beta, 0, maximizing);
   }
 
   const moveActions = generateMoveActions(state);
@@ -210,7 +241,8 @@ function scoreMoveAction(
 
   if (persona.searchDepth <= 1) {
     // Depth 1: just evaluate the resulting position + quiescence
-    return quiescence(nextState, botColor, persona, -Infinity, Infinity, 0);
+    // After bot's move, opponent moves next (minimizing)
+    return quiescence(nextState, botColor, persona, -Infinity, Infinity, 0, false);
   }
 
   // Depth 2+: run minimax from the opponent's perspective
