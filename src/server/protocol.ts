@@ -18,6 +18,7 @@ export interface CreateRoomOpts {
 export interface CreateRoomResponse {
   roomId: string;
   color: Color;
+  error?: string;
 }
 
 export interface JoinRoomResponse {

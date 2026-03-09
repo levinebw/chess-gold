@@ -6,6 +6,7 @@ import { Server } from 'socket.io';
 import { createInitialState, applyAction } from '../engine/index.ts';
 import type { GameState, GameError, Color } from '../engine/index.ts';
 import type { ClientEvents, ServerEvents, RoomInfo } from './protocol.ts';
+import { validateAction, validateRoomId, validateCreateRoomOpts } from './validation.ts';
 
 const app = express();
 app.disable('x-powered-by');
@@ -69,6 +70,44 @@ function toRoomInfo(room: Room): RoomInfo {
   };
 }
 
+// --- Rate limiting ---
+
+interface RateLimitBucket {
+  count: number;
+  resetAt: number;
+}
+
+const rateLimits = new Map<string, Map<string, RateLimitBucket>>();
+
+const RATE_LIMITS: Record<string, { maxPerWindow: number; windowMs: number }> = {
+  'create-room': { maxPerWindow: 5, windowMs: 60_000 },
+  'join-room': { maxPerWindow: 10, windowMs: 60_000 },
+  'action': { maxPerWindow: 60, windowMs: 60_000 },
+  'request-rematch': { maxPerWindow: 5, windowMs: 60_000 },
+  'list-rooms': { maxPerWindow: 10, windowMs: 60_000 },
+};
+
+function checkRateLimit(socketId: string, event: string): boolean {
+  const limit = RATE_LIMITS[event];
+  if (!limit) return true;
+
+  if (!rateLimits.has(socketId)) {
+    rateLimits.set(socketId, new Map());
+  }
+  const socketBuckets = rateLimits.get(socketId)!;
+
+  const now = Date.now();
+  let bucket = socketBuckets.get(event);
+
+  if (!bucket || now >= bucket.resetAt) {
+    bucket = { count: 0, resetAt: now + limit.windowMs };
+    socketBuckets.set(event, bucket);
+  }
+
+  bucket.count++;
+  return bucket.count <= limit.maxPerWindow;
+}
+
 // --- Stale room cleanup ---
 
 setInterval(() => {
@@ -92,13 +131,24 @@ io.on('connection', (socket) => {
   console.log(`Connected: ${socket.id}`);
 
   socket.on('create-room', (opts, callback) => {
+    if (!checkRateLimit(socket.id, 'create-room')) {
+      callback({ roomId: '', color: 'white', error: 'Rate limited' });
+      return;
+    }
+
+    const validatedOpts = validateCreateRoomOpts(opts);
+    if (opts !== undefined && opts !== null && validatedOpts === null) {
+      callback({ roomId: '', color: 'white', error: 'Invalid options' });
+      return;
+    }
+
     if (rooms.size >= MAX_ROOMS) {
       callback({ roomId: '', color: 'white', error: 'Server is at capacity' });
       return;
     }
     const roomId = generateRoomId();
-    const startingGold = opts?.startingGold ?? 3;
-    const modeConfig = opts?.modeConfig;
+    const startingGold = validatedOpts?.startingGold ?? 3;
+    const modeConfig = validatedOpts?.modeConfig;
     const room: Room = {
       id: roomId,
       white: socket.id,
@@ -116,7 +166,18 @@ io.on('connection', (socket) => {
   });
 
   socket.on('join-room', (roomId, callback) => {
-    const room = rooms.get(roomId);
+    if (!checkRateLimit(socket.id, 'join-room')) {
+      callback({ error: 'Rate limited' });
+      return;
+    }
+
+    const validatedRoomId = validateRoomId(roomId);
+    if (validatedRoomId === null) {
+      callback({ error: 'Invalid room ID' });
+      return;
+    }
+
+    const room = rooms.get(validatedRoomId);
     if (!room) {
       callback({ error: 'Room not found' });
       return;
@@ -138,20 +199,34 @@ io.on('connection', (socket) => {
     if (timer) {
       clearTimeout(timer);
       room.disconnectTimers.delete(color);
-      io.to(roomId).emit('player-reconnected', color);
+      io.to(validatedRoomId).emit('player-reconnected', color);
     } else {
-      io.to(roomId).emit('player-joined', color);
+      io.to(validatedRoomId).emit('player-joined', color);
     }
 
-    socket.join(roomId);
-    callback({ roomId, color, state: room.state });
+    socket.join(validatedRoomId);
+    callback({ roomId: validatedRoomId, color, state: room.state });
     // Emit game-state to all players so they get the correct mode/state
-    io.to(roomId).emit('game-state', room.state);
-    console.log(`${socket.id} joined room ${roomId} as ${color}`);
+    io.to(validatedRoomId).emit('game-state', room.state);
+    console.log(`${socket.id} joined room ${validatedRoomId} as ${color}`);
   });
 
   socket.on('action', (roomId, action) => {
-    const room = rooms.get(roomId);
+    if (!checkRateLimit(socket.id, 'action')) {
+      socket.emit('action-error', { type: 'error', code: 'INVALID_ACTION', message: 'Rate limited' } as GameError);
+      return;
+    }
+
+    const validatedRoomId = validateRoomId(roomId);
+    if (validatedRoomId === null) return;
+
+    const validatedAction = validateAction(action);
+    if (validatedAction === null) {
+      socket.emit('action-error', { type: 'error', code: 'INVALID_ACTION', message: 'Invalid action payload' } as GameError);
+      return;
+    }
+
+    const room = rooms.get(validatedRoomId);
     if (!room) return;
 
     const color = getPlayerColor(room, socket.id);
@@ -162,22 +237,27 @@ io.on('connection', (socket) => {
     }
 
     try {
-      const result = applyAction(room.state, action);
+      const result = applyAction(room.state, validatedAction);
       if ('type' in result && result.type === 'error') {
         socket.emit('action-error', result as GameError);
         return;
       }
 
       room.state = result as GameState;
-      io.to(roomId).emit('game-state', room.state);
+      io.to(validatedRoomId).emit('game-state', room.state);
     } catch (err) {
-      console.error(`Action error in room ${roomId}:`, err);
+      console.error(`Action error in room ${validatedRoomId}:`, err);
       socket.emit('action-error', { type: 'error', code: 'INVALID_ACTION', message: 'Server error processing action' } as GameError);
     }
   });
 
   socket.on('request-rematch', (roomId) => {
-    const room = rooms.get(roomId);
+    if (!checkRateLimit(socket.id, 'request-rematch')) return;
+
+    const validatedRoomId = validateRoomId(roomId);
+    if (validatedRoomId === null) return;
+
+    const room = rooms.get(validatedRoomId);
     if (!room) return;
 
     const color = getPlayerColor(room, socket.id);
@@ -187,14 +267,19 @@ io.on('connection', (socket) => {
       // Both players have requested — start new game
       room.state = createInitialState(room.state.modeConfig, room.startingGold);
       room.rematchRequested = null;
-      io.to(roomId).emit('rematch-accepted', room.state);
+      io.to(validatedRoomId).emit('rematch-accepted', room.state);
     } else {
       room.rematchRequested = color;
-      socket.to(roomId).emit('rematch-requested', color);
+      socket.to(validatedRoomId).emit('rematch-requested', color);
     }
   });
 
   socket.on('list-rooms', (callback) => {
+    if (!checkRateLimit(socket.id, 'list-rooms')) {
+      callback([]);
+      return;
+    }
+
     const waiting: RoomInfo[] = [];
     for (const room of rooms.values()) {
       if (!room.white || !room.black) {
@@ -206,6 +291,9 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log(`Disconnected: ${socket.id}`);
+
+    // Clean up rate limit state
+    rateLimits.delete(socket.id);
 
     for (const [roomId, room] of rooms) {
       const color = getPlayerColor(room, socket.id);
