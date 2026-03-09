@@ -17,9 +17,9 @@ export type OnlineStatus =
   | 'room-closed'
   | 'error';
 
-export function useOnlineGame(roomId: string, myColor: Color, existingSocket: TypedSocket) {
+export function useOnlineGame(roomId: string, myColor: Color, existingSocket: TypedSocket, initialState?: GameState) {
   const socketRef = useRef<TypedSocket>(existingSocket);
-  const [state, setState] = useState<GameState>(() => createInitialState());
+  const [state, setState] = useState<GameState>(() => initialState ?? createInitialState());
   const [error, setError] = useState<GameError | null>(null);
   const [placingPiece, setPlacingPiece] = useState<PurchasableRole | null>(null);
   const [onlineStatus, setOnlineStatus] = useState<OnlineStatus>('playing');

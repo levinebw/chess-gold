@@ -13,7 +13,7 @@ import { useGameContext } from './context/GameContext.tsx';
 import { useOnlineGame } from './hooks/useOnlineGame.ts';
 import { GoldCoin } from './components/GoldCoin.tsx';
 import { isMuted, setMuted } from './utils/sounds.ts';
-import type { Color, GameModeConfig } from '../engine/types.ts';
+import type { Color, GameModeConfig, GameState } from '../engine/types.ts';
 import type { Socket } from 'socket.io-client';
 import type { ClientEvents, ServerEvents } from '../server/protocol.ts';
 import '../styles/main.css';
@@ -23,7 +23,7 @@ const STARTING_GOLD_OPTIONS = [1, 3, 5, 10, 100];
 type AppScreen =
   | { type: 'lobby' }
   | { type: 'local'; modeConfig: GameModeConfig }
-  | { type: 'online'; roomId: string; color: Color; socket: Socket<ServerEvents, ClientEvents> };
+  | { type: 'online'; roomId: string; color: Color; socket: Socket<ServerEvents, ClientEvents>; initialState?: GameState };
 
 function GameView({ isOnline, onLeave }: { isOnline: boolean; onLeave?: () => void }) {
   const { undo, canUndo, resetGame, startingGold, setStartingGold, state, flipBoard } = useGameContext();
@@ -99,8 +99,8 @@ function GameView({ isOnline, onLeave }: { isOnline: boolean; onLeave?: () => vo
   );
 }
 
-function OnlineGameWrapper({ roomId, color, socket, onLeave }: { roomId: string; color: Color; socket: Socket<ServerEvents, ClientEvents>; onLeave: () => void }) {
-  const game = useOnlineGame(roomId, color, socket);
+function OnlineGameWrapper({ roomId, color, socket, initialState, onLeave }: { roomId: string; color: Color; socket: Socket<ServerEvents, ClientEvents>; initialState?: GameState; onLeave: () => void }) {
+  const game = useOnlineGame(roomId, color, socket, initialState);
   return (
     <OnlineGameProvider value={game}>
       <GameView isOnline onLeave={onLeave} />
@@ -115,8 +115,8 @@ export default function App() {
     setScreen({ type: 'local', modeConfig });
   }, []);
 
-  const handleJoinedRoom = useCallback((roomId: string, color: Color, _socket: Socket<ServerEvents, ClientEvents>) => {
-    setScreen({ type: 'online', roomId, color, socket: _socket });
+  const handleJoinedRoom = useCallback((roomId: string, color: Color, _socket: Socket<ServerEvents, ClientEvents>, initialState?: GameState) => {
+    setScreen({ type: 'online', roomId, color, socket: _socket, initialState });
   }, []);
 
   const handleLeave = useCallback(() => {
@@ -137,6 +137,7 @@ export default function App() {
       <OnlineGameWrapper
         roomId={screen.roomId}
         color={screen.color}
+        initialState={screen.initialState}
         socket={screen.socket}
         onLeave={handleLeave}
       />

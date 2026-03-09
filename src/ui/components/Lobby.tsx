@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { GoldCoin } from './GoldCoin.tsx';
 import { MODE_PRESETS } from '../../engine/config.ts';
-import type { Color, GameModeConfig } from '../../engine/types.ts';
+import type { Color, GameModeConfig, GameState } from '../../engine/types.ts';
 import type { ClientEvents, ServerEvents, RoomInfo } from '../../server/protocol.ts';
 
 type TypedSocket = Socket<ServerEvents, ClientEvents>;
@@ -31,7 +31,7 @@ const AVAILABLE_MODES = [
 
 interface Props {
   onLocalGame: (modeConfig: GameModeConfig) => void;
-  onJoinedRoom: (roomId: string, color: Color, socket: TypedSocket) => void;
+  onJoinedRoom: (roomId: string, color: Color, socket: TypedSocket, initialState?: GameState) => void;
 }
 
 export function Lobby({ onLocalGame, onJoinedRoom }: Props) {
@@ -77,12 +77,17 @@ export function Lobby({ onLocalGame, onJoinedRoom }: Props) {
       onJoinedRoom(waitingRoomId, 'white', socket);
     };
 
+    const handleGameState = (serverState: GameState) => {
+      handedOffRef.current = true;
+      onJoinedRoom(waitingRoomId, 'white', socket, serverState);
+    };
+
     socket.on('player-joined', handleJoined);
-    socket.on('game-state', handleJoined);
+    socket.on('game-state', handleGameState);
 
     return () => {
       socket.off('player-joined', handleJoined);
-      socket.off('game-state', handleJoined);
+      socket.off('game-state', handleGameState);
     };
   }, [waitingRoomId, onJoinedRoom]);
 
@@ -118,7 +123,7 @@ export function Lobby({ onLocalGame, onJoinedRoom }: Props) {
       }
       if (res.roomId && res.color) {
         handedOffRef.current = true;
-        onJoinedRoom(res.roomId, res.color, socket);
+        onJoinedRoom(res.roomId, res.color, socket, res.state);
       }
     });
   };
