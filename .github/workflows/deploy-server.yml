@@ -62,4 +62,4 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --port 3001 \
-            --set-env-vars "CLIENT_ORIGIN=https://levinebw.github.io"
+            --set-env-vars "^||^CLIENT_ORIGIN=https://playchessgold.com,https://levinebw.github.io,http://localhost:5173"
