@@ -11,8 +11,10 @@ const PIECE_DISPLAY: { role: PurchasableRole; label: string; symbol: string }[] 
 ];
 
 export function Shop() {
-  const { state, config, canAfford, placingPiece, startPlacement } = useGameContext();
+  const ctx = useGameContext();
+  const { state, config, canAfford, placingPiece, startPlacement } = ctx;
 
+  const isBotTurn = 'isBotTurn' in ctx ? ctx.isBotTurn : false;
   const isGameOver = state.status === 'checkmate' || state.status === 'stalemate';
 
   return (
@@ -27,8 +29,8 @@ export function Shop() {
           return (
             <button
               key={role}
-              className={`shop-piece ${isSelected ? 'selected' : ''} ${!affordable ? 'disabled' : ''}`}
-              disabled={!affordable || isGameOver}
+              className={`shop-piece ${isSelected ? 'selected' : ''} ${!affordable || isBotTurn ? 'disabled' : ''}`}
+              disabled={!affordable || isGameOver || isBotTurn}
               onClick={() => startPlacement(role)}
             >
               <span className="piece-symbol">{symbol}</span>

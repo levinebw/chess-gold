@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { GoldCoin } from './GoldCoin.tsx';
 import { MODE_PRESETS } from '../../engine/config.ts';
+import { BOT_PERSONAS } from '../../engine/bot/personas.ts';
+import type { BotPersona } from '../../engine/bot/types.ts';
 import type { Color, GameModeConfig, GameState } from '../../engine/types.ts';
 import type { ClientEvents, ServerEvents, RoomInfo } from '../../server/protocol.ts';
 
@@ -31,10 +33,11 @@ const AVAILABLE_MODES = [
 
 interface Props {
   onLocalGame: (modeConfig: GameModeConfig) => void;
+  onBotGame: (persona: BotPersona, modeConfig: GameModeConfig) => void;
   onJoinedRoom: (roomId: string, color: Color, socket: TypedSocket, initialState?: GameState) => void;
 }
 
-export function Lobby({ onLocalGame, onJoinedRoom }: Props) {
+export function Lobby({ onLocalGame, onBotGame, onJoinedRoom }: Props) {
   const [joinCode, setJoinCode] = useState('');
   const [selectedMode, setSelectedMode] = useState<string>('chess-gold');
   const [startingGold, setStartingGold] = useState(3);
@@ -181,6 +184,24 @@ export function Lobby({ onLocalGame, onJoinedRoom }: Props) {
         <button className="lobby-button primary" onClick={() => onLocalGame(modeConfig)}>
           Local Game (Pass &amp; Play)
         </button>
+      </div>
+
+      {/* Play vs Bot */}
+      <div className="lobby-section">
+        <h2>Play vs Bot</h2>
+        <div className="lobby-bot-cards">
+          {BOT_PERSONAS.map(persona => (
+            <button
+              key={persona.id}
+              className="lobby-bot-card"
+              onClick={() => onBotGame(persona, modeConfig)}
+            >
+              <span className="bot-avatar">{persona.avatar}</span>
+              <span className="lobby-bot-name">{persona.name}</span>
+              <span className="lobby-bot-desc">{persona.description}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="lobby-divider">or play online</div>

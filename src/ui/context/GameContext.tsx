@@ -1,16 +1,25 @@
 import { createContext, useContext } from 'react';
 import type { GameModeConfig } from '../../engine/types.ts';
+import type { BotPersona } from '../../engine/bot/types.ts';
 import { useGame } from '../hooks/useGame.ts';
+import { useBotGame } from '../hooks/useBotGame.ts';
 import type { useOnlineGame } from '../hooks/useOnlineGame.ts';
 
-// The context value is the union of local and online game hooks
-// Online hook returns a superset of the local hook's shape
-type GameContextValue = ReturnType<typeof useGame> | ReturnType<typeof useOnlineGame>;
+// The context value is the union of local, bot, and online game hooks
+type GameContextValue =
+  | ReturnType<typeof useGame>
+  | ReturnType<typeof useBotGame>
+  | ReturnType<typeof useOnlineGame>;
 
 const GameContext = createContext<GameContextValue | null>(null);
 
 export function GameProvider({ children, modeConfig }: { children: React.ReactNode; modeConfig?: GameModeConfig }) {
   const game = useGame(modeConfig);
+  return <GameContext.Provider value={game}>{children}</GameContext.Provider>;
+}
+
+export function BotGameProvider({ children, persona, modeConfig }: { children: React.ReactNode; persona: BotPersona; modeConfig?: GameModeConfig }) {
+  const game = useBotGame(persona, modeConfig);
   return <GameContext.Provider value={game}>{children}</GameContext.Provider>;
 }
 
