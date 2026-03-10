@@ -9,7 +9,7 @@ export const LIZZIE: BotPersona = {
   id: 'lizzie',
   name: 'Lizzie',
   description: 'A friendly pup who loves a good game!',
-  avatar: '\u{1F415}', // dog
+  avatar: '\u{1F429}', // poodle
   aggression: 0.4,
   greed: 0.4,
   riskTolerance: 0.3,
@@ -27,7 +27,7 @@ export const MAXI: BotPersona = {
   id: 'maxi',
   name: 'Maxi',
   description: 'Small but fierce! Plays to win.',
-  avatar: '\u{1F43A}', // wolf
+  avatar: '\u{1F415}', // dog
   aggression: 0.85,
   greed: 0.2,
   riskTolerance: 0.8,
@@ -44,7 +44,7 @@ export const MAXI: BotPersona = {
 export const MONA: BotPersona = {
   id: 'mona',
   name: 'Mona',
-  description: 'The best girl. Very difficult to beat.',
+  description: "Lovable girl. Don't let her looks fool you.",
   avatar: '\u{1F436}', // dog face
   aggression: 0.7,
   greed: 0.3,
