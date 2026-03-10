@@ -619,10 +619,6 @@ body {
   .turn-indicator {
     align-items: flex-start;
   }
-
-  .game-content.no-economy .board-wrapper {
-    width: min(480px, calc(100vw - 2rem));
-  }
 }
 
 /* Error */
@@ -1025,14 +1021,16 @@ body {
   color: #d4a843;
 }
 
-/* No-economy layout: board takes more space */
+/* No-economy layout: board takes more space (desktop only) */
 
 .game-content.no-economy {
   justify-content: center;
 }
 
-.game-content.no-economy .board-wrapper {
-  width: min(calc(100vh - 8rem), calc(100vw - 14rem));
+@media (min-width: 901px) {
+  .game-content.no-economy .board-wrapper {
+    width: min(calc(100vh - 8rem), calc(100vw - 14rem));
+  }
 }
 
 /* Lobby back to menu */
