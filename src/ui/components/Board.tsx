@@ -64,6 +64,11 @@ export function Board() {
         color: state.turn,
         dests: legalDestsToChessground(legalDests),
       },
+      premovable: {
+        enabled: true,
+        showDests: true,
+        castle: true,
+      },
       events: {
         move: (orig: Key, dest: Key) => {
           const from = keyToSquare(orig);
@@ -87,7 +92,7 @@ export function Board() {
   useEffect(() => {
     if (!cgRef.current) return;
 
-    const isGameOver = state.status === 'checkmate' || state.status === 'stalemate';
+    const isGameOver = state.status === 'checkmate' || state.status === 'stalemate' || state.status === 'draw';
     const blocked = !!placingPiece || !!pendingPromotion || isGameOver;
 
     // Extract last move for highlighting
@@ -112,6 +117,11 @@ export function Board() {
         dests: blocked ? new Map() : legalDestsToChessground(legalDests),
       },
     });
+
+    // Auto-play premove when player's turn arrives
+    if (!blocked && state.turn === boardOrientation) {
+      setTimeout(() => cgRef.current?.playPremove(), 1);
+    }
   }, [state, legalDests, placingPiece, pendingPromotion, error, boardOrientation]);
 
   // Play sounds on state changes
