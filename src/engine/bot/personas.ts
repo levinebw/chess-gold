@@ -36,5 +36,23 @@ export const MAXI: BotPersona = {
   randomness: 0.1,
 };
 
+/**
+ * Mona -- The best girl. Very difficult to beat.
+ * Deep search, minimal randomness, strong positional play.
+ * Values queens and rooks highly. Plays sharp, accurate chess.
+ */
+export const MONA: BotPersona = {
+  id: 'mona',
+  name: 'Mona',
+  description: 'The best girl. Very difficult to beat.',
+  avatar: '\u{1F436}', // dog face
+  aggression: 0.7,
+  greed: 0.3,
+  riskTolerance: 0.6,
+  piecePriority: { pawn: 2, knight: 2, bishop: 3, rook: 3, queen: 3 },
+  searchDepth: 3,
+  randomness: 0.03,
+};
+
 /** All available bot personas. */
-export const BOT_PERSONAS: BotPersona[] = [LIZZIE, MAXI];
+export const BOT_PERSONAS: BotPersona[] = [LIZZIE, MAXI, MONA];

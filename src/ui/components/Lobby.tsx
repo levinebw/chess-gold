@@ -43,6 +43,7 @@ export function Lobby({ onLocalGame, onBotGame, onJoinedRoom }: Props) {
   const [selectedMode, setSelectedMode] = useState<string>('chess-gold');
   const [startingGold, setStartingGold] = useState(3);
   const [status, setStatus] = useState<'idle' | 'connecting' | 'waiting' | 'error'>('idle');
+  const [socketConnected, setSocketConnected] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [waitingRoomId, setWaitingRoomId] = useState<string | null>(null);
   const [rooms, setRooms] = useState<RoomInfo[]>([]);
@@ -58,6 +59,7 @@ export function Lobby({ onLocalGame, onBotGame, onJoinedRoom }: Props) {
     socketRef.current = socket;
 
     socket.on('connect', () => {
+      setSocketConnected(true);
       // Authenticate (or re-authenticate) on every connect/reconnect
       const creds = getSessionCredentials();
       socket.emit('authenticate', creds.sessionId, creds.token, (res: AuthResponse) => {
@@ -67,6 +69,10 @@ export function Lobby({ onLocalGame, onBotGame, onJoinedRoom }: Props) {
           setRooms(roomList);
         });
       });
+    });
+
+    socket.on('disconnect', () => {
+      setSocketConnected(false);
     });
 
     return () => {
@@ -104,6 +110,11 @@ export function Lobby({ onLocalGame, onBotGame, onJoinedRoom }: Props) {
 
     setStatus('connecting');
     socket.emit('create-room', { startingGold, modeConfig }, (res) => {
+      if (res.error) {
+        setErrorMsg(res.error);
+        setStatus('error');
+        return;
+      }
       setWaitingRoomId(res.roomId);
       setStatus('waiting');
     });
@@ -231,8 +242,8 @@ export function Lobby({ onLocalGame, onBotGame, onJoinedRoom }: Props) {
               </select>
             </label>
           )}
-          <button className="lobby-button primary" onClick={createRoom} disabled={status === 'connecting'}>
-            {status === 'connecting' ? 'Creating...' : 'Create Room'}
+          <button className="lobby-button primary" onClick={createRoom} disabled={!socketConnected || status === 'connecting'}>
+            {!socketConnected ? 'Connecting...' : status === 'connecting' ? 'Creating...' : 'Create Room'}
           </button>
         </div>
       </div>
@@ -252,7 +263,7 @@ export function Lobby({ onLocalGame, onBotGame, onJoinedRoom }: Props) {
           <button
             className="lobby-button primary"
             onClick={() => joinRoom(joinCode)}
-            disabled={!joinCode || status === 'connecting'}
+            disabled={!joinCode || !socketConnected || status === 'connecting'}
           >
             Join
           </button>
