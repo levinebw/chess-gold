@@ -1,4 +1,4 @@
-import { Chess } from 'chessops/chess';
+import { Chess, Castles } from 'chessops/chess';
 import { parseFen, makeFen } from 'chessops/fen';
 import type { Role as ChessopsRole } from 'chessops';
 import type { GameState, Square, Role } from './types.ts';
@@ -8,8 +8,18 @@ function createPosition(fen: string): Chess {
   const setup = parseFen(fen);
   if (setup.isErr) throw new Error(`Invalid FEN: ${fen}`);
   const pos = Chess.fromSetup(setup.value);
-  if (pos.isErr) throw new Error(`Invalid position: ${fen}`);
-  return pos.value;
+  if (pos.isOk) return pos.value;
+
+  // Fallback for variant positions (Conqueror can produce positions
+  // that chessops rejects, e.g. pawns on back rank from conversion)
+  const fallback = Chess.default();
+  fallback.board = setup.value.board;
+  fallback.turn = setup.value.turn;
+  fallback.castles = Castles.fromSetup(setup.value);
+  fallback.epSquare = setup.value.epSquare;
+  fallback.halfmoves = setup.value.halfmoves;
+  fallback.fullmoves = setup.value.fullmoves;
+  return fallback;
 }
 
 export function getLegalMoves(state: GameState): Map<Square, Square[]> {

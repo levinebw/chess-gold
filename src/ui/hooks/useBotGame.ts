@@ -25,8 +25,8 @@ export function useBotGame(persona: BotPersona, modeConfig?: GameModeConfig) {
       try {
         const action = chooseAction(game.state, persona);
         game.dispatch(action);
-      } catch {
-        // Bot has no available actions — game should be over
+      } catch (e) {
+        console.error('Bot error:', e);
       }
     }, thinkingDelay(persona));
 
