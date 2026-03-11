@@ -1,13 +1,13 @@
 import { parseFen } from 'chessops/fen';
 import type { Color } from 'chessops';
 import type { GameState, MoveAction } from '../types.ts';
-import { getLegalMoves } from '../position.ts';
-import { applyAction } from '../game.ts';
+import { getLegalMoves, applyMove, isInCheck } from '../position.ts';
+import { checkAllConverted } from '../win-conditions.ts';
 import { evaluatePosition } from './evaluate.ts';
 import type { BotPersona, EvaluationScore } from './types.ts';
 
 /** Maximum quiescence depth to avoid infinite capture chains. */
-const MAX_QUIESCENCE_DEPTH = 3;
+const MAX_QUIESCENCE_DEPTH = 2;
 
 /** Default time budget for move search (ms). */
 const DEFAULT_TIME_BUDGET_MS = 2000;
@@ -57,6 +57,46 @@ function generateTaggedMoves(state: GameState): TaggedMove[] {
 }
 
 /**
+ * Lightweight move application for search.
+ * Uses applyMove (position.ts) directly — bypasses game.ts validation,
+ * income, history, and status detection. ~3x faster per node.
+ */
+function applyMoveForSearch(state: GameState, action: MoveAction): GameState | null {
+  try {
+    return applyMove(state, action.from, action.to, action.promotion);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check if the position is terminal. Returns a score if terminal, null otherwise.
+ * Call AFTER generating tagged moves for the position.
+ */
+function evaluateTerminal(
+  state: GameState,
+  taggedMoves: TaggedMove[],
+  botColor: Color,
+): EvaluationScore | null {
+  // Mode-specific win conditions (e.g. Conqueror's all-converted)
+  if (state.modeConfig.winConditions?.includes('all-converted')) {
+    const winner = checkAllConverted(state);
+    if (winner) return winner === botColor ? 10000 : -10000;
+  }
+
+  // No legal moves = checkmate or stalemate
+  if (taggedMoves.length === 0) {
+    if (!state.modeConfig.noCheck && isInCheck(state)) {
+      // Checkmate — bad for the side to move
+      return state.turn === botColor ? -10000 : 10000;
+    }
+    return 0; // Stalemate
+  }
+
+  return null; // Not terminal
+}
+
+/**
  * Quiescence search: keep searching captures only until the position is quiet.
  * Uses minimax convention: always evaluates from botColor's perspective.
  */
@@ -70,18 +110,20 @@ function quiescence(
   maximizing: boolean,
   deadline: number,
 ): EvaluationScore {
-  const standPat = evaluatePosition(state, botColor, persona);
-
-  if (depth >= MAX_QUIESCENCE_DEPTH || Date.now() > deadline) return standPat;
-
-  // Terminal states
-  if (state.status === 'checkmate' || state.status === 'stalemate' || state.status === 'draw') {
-    return standPat;
+  if (depth >= MAX_QUIESCENCE_DEPTH || Date.now() > deadline) {
+    return evaluatePosition(state, botColor, persona);
   }
 
-  // Only search captures
   const taggedMoves = generateTaggedMoves(state);
+
+  // Terminal check
+  const terminal = evaluateTerminal(state, taggedMoves, botColor);
+  if (terminal !== null) return terminal;
+
+  const standPat = evaluatePosition(state, botColor, persona);
   const captures = taggedMoves.filter(m => m.isCapture);
+
+  if (captures.length === 0) return standPat; // Quiet position
 
   if (maximizing) {
     let currentAlpha = alpha;
@@ -90,11 +132,11 @@ function quiescence(
 
     for (const { action } of captures) {
       if (Date.now() > deadline) break;
-      const result = applyAction(state, action);
-      if ('type' in result && result.type === 'error') continue;
+      const result = applyMoveForSearch(state, action);
+      if (!result) continue;
 
       const score = quiescence(
-        result as GameState, botColor, persona,
+        result, botColor, persona,
         currentAlpha, beta, depth + 1, false, deadline,
       );
 
@@ -110,11 +152,11 @@ function quiescence(
 
     for (const { action } of captures) {
       if (Date.now() > deadline) break;
-      const result = applyAction(state, action);
-      if ('type' in result && result.type === 'error') continue;
+      const result = applyMoveForSearch(state, action);
+      if (!result) continue;
 
       const score = quiescence(
-        result as GameState, botColor, persona,
+        result, botColor, persona,
         alpha, currentBeta, depth + 1, true, deadline,
       );
 
@@ -139,18 +181,14 @@ function minimax(
   maximizing: boolean,
   deadline: number,
 ): EvaluationScore {
-  // Terminal states
-  if (state.status === 'checkmate' || state.status === 'stalemate' || state.status === 'draw') {
-    return evaluatePosition(state, botColor, persona);
-  }
+  const taggedMoves = generateTaggedMoves(state);
+
+  // Terminal check (checkmate, stalemate, mode-specific wins)
+  const terminal = evaluateTerminal(state, taggedMoves, botColor);
+  if (terminal !== null) return terminal;
 
   if (depth === 0 || Date.now() > deadline) {
     return quiescence(state, botColor, persona, alpha, beta, 0, maximizing, deadline);
-  }
-
-  const taggedMoves = generateTaggedMoves(state);
-  if (taggedMoves.length === 0) {
-    return evaluatePosition(state, botColor, persona);
   }
 
   // Move ordering: captures first for better pruning
@@ -160,11 +198,11 @@ function minimax(
     let maxEval = -Infinity;
     for (const { action } of taggedMoves) {
       if (Date.now() > deadline) break;
-      const result = applyAction(state, action);
-      if ('type' in result && result.type === 'error') continue;
+      const result = applyMoveForSearch(state, action);
+      if (!result) continue;
 
       const evalScore = minimax(
-        result as GameState, botColor, persona,
+        result, botColor, persona,
         depth - 1, alpha, beta, false, deadline,
       );
 
@@ -177,11 +215,11 @@ function minimax(
     let minEval = Infinity;
     for (const { action } of taggedMoves) {
       if (Date.now() > deadline) break;
-      const result = applyAction(state, action);
-      if ('type' in result && result.type === 'error') continue;
+      const result = applyMoveForSearch(state, action);
+      if (!result) continue;
 
       const evalScore = minimax(
-        result as GameState, botColor, persona,
+        result, botColor, persona,
         depth - 1, alpha, beta, true, deadline,
       );
 
@@ -203,19 +241,8 @@ function scoreMoveAction(
   persona: BotPersona,
   deadline: number,
 ): EvaluationScore {
-  const result = applyAction(state, action);
-  if ('type' in result && result.type === 'error') return -Infinity;
-
-  const nextState = result as GameState;
-
-  // Immediate checkmate = maximum score
-  if (nextState.status === 'checkmate' && nextState.winner === botColor) {
-    return 10000;
-  }
-
-  if (persona.searchDepth <= 1) {
-    return quiescence(nextState, botColor, persona, -Infinity, Infinity, 0, false, deadline);
-  }
+  const nextState = applyMoveForSearch(state, action);
+  if (!nextState) return -Infinity;
 
   return minimax(
     nextState, botColor, persona,
@@ -277,11 +304,12 @@ export function findCheckmateInOne(state: GameState): MoveAction | null {
   const taggedMoves = generateTaggedMoves(state);
 
   for (const { action } of taggedMoves) {
-    const result = applyAction(state, action);
-    if ('type' in result && result.type === 'error') continue;
+    const result = applyMoveForSearch(state, action);
+    if (!result) continue;
 
-    const nextState = result as GameState;
-    if (nextState.status === 'checkmate') {
+    // Check if opponent has no legal moves and is in check
+    const childMoves = generateTaggedMoves(result);
+    if (childMoves.length === 0 && !result.modeConfig.noCheck && isInCheck(result)) {
       return action;
     }
   }
