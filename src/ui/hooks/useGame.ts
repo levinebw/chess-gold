@@ -2,8 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import type { GameState, GameAction, GameError, GameModeConfig, PurchasableRole, Square, ItemType } from '../../engine/types.ts';
 import { createInitialState, applyAction } from '../../engine/game.ts';
 import { getLegalMoves } from '../../engine/position.ts';
-import { getValidPlacementSquares, hasInInventory } from '../../engine/placement.ts';
-import { getCrossbowTargets } from '../../engine/equipment.ts';
+import { getValidPlacementSquares } from '../../engine/placement.ts';
 import { validateHit } from '../../engine/lootbox.ts';
 import { CHESS_GOLD_CONFIG } from '../../engine/config.ts';
 import { parseFen } from 'chessops/fen';
@@ -166,7 +165,7 @@ export function useGame(modeConfig?: GameModeConfig) {
       const piece = board.get(sq);
       if (!piece || piece.role === 'king') continue;
       if (equippingItem === 'crown' && piece.role === 'queen') continue;
-      const sqName = `${FILES[sq % 8]}${Math.floor(sq / 8) + 1}` as any;
+      const sqName = `${FILES[sq % 8]}${Math.floor(sq / 8) + 1}` as import('../../engine/types.ts').SquareName;
       if (state.equipment[sqName]) continue;
       // Check gold affordability (income is already accounted for in gold display)
       const cost = CHESS_GOLD_CONFIG.lootBox.equipCosts[equippingItem];
@@ -183,10 +182,6 @@ export function useGame(modeConfig?: GameModeConfig) {
 
     return state.lootBoxes.map(box => {
       const adjacentPieces: Square[] = [];
-      const setup = parseFen(state.fen);
-      if (setup.isErr) return { lootBoxSquare: box.square, pieceSquares: [] };
-      const board = setup.value.board;
-
       const bFile = box.square % 8;
       const bRank = Math.floor(box.square / 8);
       for (let df = -1; df <= 1; df++) {

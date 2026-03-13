@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { Chessground } from 'chessground';
 import type { Api } from 'chessground/api';
-import type { Key, DrawShape } from 'chessground/types';
+import type { Key } from 'chessground/types';
+import type { DrawShape } from 'chessground/draw';
 import { parseFen } from 'chessops/fen';
-import type { Square, PurchasableRole, ItemType, SquareName } from '../../engine/types.ts';
+import type { Square, PurchasableRole, ItemType } from '../../engine/types.ts';
 import { useGameContext } from '../context/GameContext.tsx';
 import { isInCheck } from '../../engine/position.ts';
 import { playSound } from '../utils/sounds.ts';
@@ -180,10 +181,6 @@ export function Board() {
       }
     } else if (lastAction?.type === 'hit-loot-box') {
       // Detect if a box was opened (fewer boxes now)
-      const prevLootBoxCount = prevFen ? state.lootBoxes.length : 0;
-      // We can check by comparing loot box counts: if the action reduced the count, it was opened
-      // But we don't have prev state here — use the reward toast presence instead.
-      // Simple approach: play hit or open based on whether box count decreased
       playSound('lootBoxHit');
     } else if (lastAction?.type === 'equip') {
       playSound('equip');

@@ -19,7 +19,7 @@ const ITEM_DISPLAY: Record<ItemType, { label: string; icon: string }> = {
 
 export function InventoryPanel() {
   const ctx = useGameContext();
-  const { state, dispatch } = ctx;
+  const { state } = ctx;
 
   const startInventoryPlacement = 'startInventoryPlacement' in ctx ? ctx.startInventoryPlacement as (piece: PurchasableRole) => void : undefined;
   const startEquip = 'startEquip' in ctx ? ctx.startEquip as (item: ItemType) => void : undefined;
