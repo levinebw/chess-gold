@@ -1,4 +1,4 @@
-type SoundName = 'move' | 'capture' | 'place' | 'check' | 'gameOver' | 'purchase';
+type SoundName = 'move' | 'capture' | 'place' | 'check' | 'gameOver' | 'purchase' | 'lootBoxHit' | 'lootBoxOpen' | 'equip';
 
 const MUTE_KEY = 'chess-gold-muted';
 

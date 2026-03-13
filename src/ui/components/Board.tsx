@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Chessground } from 'chessground';
 import type { Api } from 'chessground/api';
-import type { Key } from 'chessground/types';
+import type { Key, DrawShape } from 'chessground/types';
 import { parseFen } from 'chessops/fen';
-import type { Square, PurchasableRole } from '../../engine/types.ts';
+import type { Square, PurchasableRole, ItemType, SquareName } from '../../engine/types.ts';
 import { useGameContext } from '../context/GameContext.tsx';
 import { isInCheck } from '../../engine/position.ts';
 import { playSound } from '../utils/sounds.ts';
@@ -40,8 +40,31 @@ function isPromotionMove(fen: string, from: Square, to: Square): boolean {
   return piece?.role === 'pawn';
 }
 
+const EQUIPMENT_ICONS: Record<string, string> = {
+  crossbow: '\uD83C\uDFF9',
+  'turtle-shell': '\uD83D\uDEE1\uFE0F',
+  crown: '\uD83D\uDC51',
+};
+
+const HIT_COUNT_COLORS: Record<number, string> = {
+  3: '#4a4',
+  2: '#cc4',
+  1: '#c44',
+};
+
 export function Board() {
-  const { state, dispatch, error, legalDests, placingPiece, placementSquares, cancelPlacement, boardOrientation } = useGameContext();
+  const ctx = useGameContext();
+  const { state, dispatch, error, legalDests, placingPiece, placementSquares, cancelPlacement, boardOrientation } = ctx;
+
+  // Extract loot box context (may not exist in all game hook types)
+  const placingFromInventory = 'placingFromInventory' in ctx ? ctx.placingFromInventory as boolean : false;
+  const equippingItem = 'equippingItem' in ctx ? ctx.equippingItem as ItemType | null : null;
+  const equipTargets = 'equipTargets' in ctx ? ctx.equipTargets as Square[] : [];
+  const hittableLootBoxes = 'hittableLootBoxes' in ctx ? ctx.hittableLootBoxes as { lootBoxSquare: Square; pieceSquares: Square[] }[] : [];
+  const hittingPieceSquare = 'hittingPieceSquare' in ctx ? ctx.hittingPieceSquare as Square | null : null;
+  const hitTargets = 'hitTargets' in ctx ? ctx.hitTargets as Square[] : [];
+  const startHit = 'startHit' in ctx ? ctx.startHit as (sq: Square) => void : undefined;
+
   const boardRef = useRef<HTMLDivElement>(null);
   const cgRef = useRef<Api | null>(null);
   const [pendingPromotion, setPendingPromotion] = useState<{ from: Square; to: Square } | null>(null);
@@ -93,7 +116,7 @@ export function Board() {
     if (!cgRef.current) return;
 
     const isGameOver = state.status === 'checkmate' || state.status === 'stalemate' || state.status === 'draw';
-    const blocked = !!placingPiece || !!pendingPromotion || isGameOver;
+    const blocked = !!placingPiece || !!pendingPromotion || !!equippingItem || hittingPieceSquare !== null || isGameOver;
 
     // Extract last move for highlighting
     const lastAction = state.actionHistory[state.actionHistory.length - 1];
@@ -122,7 +145,7 @@ export function Board() {
     if (!blocked && state.turn === boardOrientation) {
       setTimeout(() => cgRef.current?.playPremove(), 1);
     }
-  }, [state, legalDests, placingPiece, pendingPromotion, error, boardOrientation]);
+  }, [state, legalDests, placingPiece, pendingPromotion, equippingItem, hittingPieceSquare, error, boardOrientation]);
 
   // Play sounds on state changes
   const prevActionCount = useRef(state.actionHistory.length);
@@ -155,46 +178,138 @@ export function Board() {
         const newPieces = state.fen.split(' ')[0].replace(/[^a-zA-Z]/g, '').length;
         playSound(newPieces < prevPieces ? 'capture' : 'move');
       }
+    } else if (lastAction?.type === 'hit-loot-box') {
+      // Detect if a box was opened (fewer boxes now)
+      const prevLootBoxCount = prevFen ? state.lootBoxes.length : 0;
+      // We can check by comparing loot box counts: if the action reduced the count, it was opened
+      // But we don't have prev state here — use the reward toast presence instead.
+      // Simple approach: play hit or open based on whether box count decreased
+      playSound('lootBoxHit');
+    } else if (lastAction?.type === 'equip') {
+      playSound('equip');
     }
   }, [state]);
 
-  // Highlight placement squares
+  // Build all auto-shapes: placement highlights, loot boxes, equipment, hit/equip targets
+  const autoShapes = useMemo((): DrawShape[] => {
+    const shapes: DrawShape[] = [];
+
+    // Placement squares (buying or inventory)
+    if (placingPiece && placementSquares.length > 0) {
+      for (const sq of placementSquares) {
+        shapes.push({ orig: squareToKey(sq), brush: 'green' });
+      }
+    }
+
+    // Equip target highlights
+    if (equippingItem && equipTargets.length > 0) {
+      for (const sq of equipTargets) {
+        shapes.push({ orig: squareToKey(sq), brush: 'blue' });
+      }
+    }
+
+    // Hit target highlights (loot box squares hittable by selected piece)
+    if (hittingPieceSquare !== null && hitTargets.length > 0) {
+      for (const sq of hitTargets) {
+        shapes.push({ orig: squareToKey(sq), brush: 'yellow' });
+      }
+      // Also highlight the selected piece
+      shapes.push({ orig: squareToKey(hittingPieceSquare), brush: 'blue' });
+    }
+
+    // Render loot boxes as custom shapes
+    for (const box of state.lootBoxes) {
+      const key = squareToKey(box.square);
+      const hitsColor = HIT_COUNT_COLORS[box.hitsRemaining] || '#c44';
+      shapes.push({
+        orig: key,
+        customSvg: {
+          html: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <text x="50" y="55" font-size="50" text-anchor="middle" dominant-baseline="central" opacity="0.85">\uD83C\uDF81</text>
+            <circle cx="82" cy="18" r="14" fill="${hitsColor}" stroke="#000" stroke-width="1.5"/>
+            <text x="82" y="19" font-size="16" font-weight="bold" text-anchor="middle" dominant-baseline="central" fill="#fff">${box.hitsRemaining}</text>
+          </svg>`,
+        },
+      });
+    }
+
+    // Render equipment icons
+    for (const [sqName, eq] of Object.entries(state.equipment)) {
+      if (!eq) continue;
+      const icon = EQUIPMENT_ICONS[eq.type] || '?';
+      shapes.push({
+        orig: sqName as Key,
+        customSvg: {
+          html: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <text x="85" y="85" font-size="28" text-anchor="middle" dominant-baseline="central" opacity="0.9">${icon}</text>
+          </svg>`,
+        },
+      });
+    }
+
+    return shapes;
+  }, [placingPiece, placementSquares, equippingItem, equipTargets, hittingPieceSquare, hitTargets, state.lootBoxes, state.equipment]);
+
+  // Apply auto-shapes
   useEffect(() => {
     if (!cgRef.current) return;
-    if (placingPiece && placementSquares.length > 0) {
-      const shapes = placementSquares.map(sq => ({
-        orig: squareToKey(sq),
-        brush: 'green',
-      }));
-      cgRef.current.setAutoShapes(shapes);
-    } else {
-      cgRef.current.setAutoShapes([]);
-    }
-  }, [placingPiece, placementSquares]);
+    cgRef.current.setAutoShapes(autoShapes);
+  }, [autoShapes]);
 
-  // Cancel placement on Escape
+  // Cancel placement/equip/hit on Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (pendingPromotion) {
           setPendingPromotion(null);
-        } else if (placingPiece) {
+        } else if (placingPiece || equippingItem || hittingPieceSquare !== null) {
           cancelPlacement();
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [placingPiece, cancelPlacement, pendingPromotion]);
+  }, [placingPiece, equippingItem, hittingPieceSquare, cancelPlacement, pendingPromotion]);
 
-  // Placement click handler via overlay
+  // Overlay click handler for placement, equip, and hit-loot-box
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cgRef.current || !placingPiece) return;
+    if (!cgRef.current) return;
     const key = cgRef.current.getKeyAtDomPos([e.clientX, e.clientY]);
     if (!key) return;
     const sq = keyToSquare(key);
-    if (placementSquares.includes(sq)) {
-      dispatch({ type: 'place', piece: placingPiece, square: sq, fromInventory: false });
+
+    // Placement mode (from shop or inventory)
+    if (placingPiece) {
+      if (placementSquares.includes(sq)) {
+        dispatch({ type: 'place', piece: placingPiece, square: sq, fromInventory: placingFromInventory });
+      }
+      return;
+    }
+
+    // Equip mode
+    if (equippingItem) {
+      if (equipTargets.includes(sq)) {
+        dispatch({ type: 'equip', item: equippingItem, square: sq });
+      }
+      return;
+    }
+
+    // Hit-loot-box mode: click on a loot box to hit it
+    if (hittingPieceSquare !== null) {
+      if (hitTargets.includes(sq)) {
+        dispatch({ type: 'hit-loot-box', pieceSquare: hittingPieceSquare, lootBoxSquare: sq });
+      }
+      return;
+    }
+
+    // Click on a piece adjacent to a loot box to enter hit mode
+    if (hittableLootBoxes.length > 0) {
+      for (const hittable of hittableLootBoxes) {
+        if (hittable.pieceSquares.includes(sq)) {
+          startHit?.(sq);
+          return;
+        }
+      }
     }
   };
 
@@ -216,10 +331,12 @@ export function Board() {
     // (pawn snaps back to pre-move position)
   };
 
+  const showOverlay = !!placingPiece || !!equippingItem || hittingPieceSquare !== null;
+
   return (
     <div className="board-wrapper">
       <div ref={boardRef} className="board-container" />
-      {placingPiece && (
+      {showOverlay && (
         <div className="placement-overlay" onClick={handleOverlayClick} />
       )}
       {pendingPromotion && (

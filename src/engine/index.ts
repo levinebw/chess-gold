@@ -11,6 +11,9 @@ export type {
   GameStatus,
   MoveAction,
   PlaceAction,
+  HitLootBoxAction,
+  EquipAction,
+  EquippedItem,
   PurchasableRole,
   Color,
   Role,
@@ -18,6 +21,12 @@ export type {
   SquareName,
   WinCondition,
   WinConditionChecker,
+  LootBox,
+  LootBoxConfig,
+  LootBoxDrop,
+  InventoryItem,
+  Item,
+  ItemType,
 } from './types.ts';
 
 // Config
@@ -33,7 +42,30 @@ export { awardTurnIncome, deductPurchaseCost, canAffordPiece, awardCaptureReward
 export { getLegalMoves, isInCheck, isCheckmate, isStalemate, applyMove } from './position.ts';
 
 // Placement
-export { isValidPlacement, getValidPlacementSquares, placementResolvesCheck } from './placement.ts';
+export { isValidPlacement, getValidPlacementSquares, placementResolvesCheck, hasInInventory, removeFromInventory } from './placement.ts';
 
 // Promotion
 export { canPromote, applyPromotion } from './promotion.ts';
+
+// Loot Boxes
+export {
+  shouldSpawnLootBox,
+  spawnLootBox,
+  validateHit,
+  applyHit,
+  rollDropTable,
+} from './lootbox.ts';
+
+// Equipment
+export {
+  validateEquip,
+  applyEquip,
+  transferEquipment,
+  removeEquipment,
+  hasTurtleShell,
+  decrementTurtleShell,
+  getCrossbowTargets,
+} from './equipment.ts';
+
+// Win Conditions
+export { checkAllConverted, checkLootBoxesCollected } from './win-conditions.ts';

@@ -2,9 +2,11 @@ import { parseFen, makeFen } from 'chessops/fen';
 import type { GameState, GameAction, GameError, GameModeConfig } from './types.ts';
 import { CHESS_GOLD_CONFIG, MODE_PRESETS } from './config.ts';
 import { awardTurnIncome, canAffordPiece, deductPurchaseCost } from './gold.ts';
-import { isValidPlacement, placementResolvesCheck, getValidPlacementSquares } from './placement.ts';
+import { isValidPlacement, placementResolvesCheck, getValidPlacementSquares, hasInInventory, removeFromInventory } from './placement.ts';
 import { getLegalMoves, isInCheck, isCheckmate, isStalemate, applyMove } from './position.ts';
-import { checkAllConverted } from './win-conditions.ts';
+import { checkAllConverted, checkLootBoxesCollected } from './win-conditions.ts';
+import { shouldSpawnLootBox, spawnLootBox, validateHit, applyHit } from './lootbox.ts';
+import { validateEquip, applyEquip } from './equipment.ts';
 
 const PURCHASABLE_PIECES: Array<import('./types.ts').PurchasableRole> = ['pawn', 'knight', 'bishop', 'rook', 'queen'];
 
@@ -65,8 +67,9 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
     return makeError('GAME_OVER', 'Game is already over');
   }
 
-  // 2. Award turn income
-  let current = awardTurnIncome(state);
+  // 2. Award turn income (only for turn-consuming actions: move and place)
+  const consumesTurn = action.type === 'move' || action.type === 'place';
+  let current = consumesTurn ? awardTurnIncome(state) : state;
   const actingPlayer = current.turn;
 
   // 3. Validate and apply action
@@ -99,9 +102,18 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
     }
 
   } else if (action.type === 'place') {
-    if (!canAffordPiece(current, action.piece)) {
-      return makeError('INSUFFICIENT_GOLD', 'Not enough gold');
+    if (action.fromInventory) {
+      // Place from inventory — free, no gold cost
+      if (!hasInInventory(current, action.piece)) {
+        return makeError('INVALID_PLACEMENT', 'Piece not in inventory');
+      }
+    } else {
+      // Place by purchasing — costs gold
+      if (!canAffordPiece(current, action.piece)) {
+        return makeError('INSUFFICIENT_GOLD', 'Not enough gold');
+      }
     }
+
     if (!isValidPlacement(current, action.piece, action.square)) {
       return makeError('INVALID_PLACEMENT', 'Invalid placement square');
     }
@@ -109,7 +121,11 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
       return makeError('INVALID_PLACEMENT', 'Placement must resolve check');
     }
 
-    current = deductPurchaseCost(current, action.piece);
+    if (action.fromInventory) {
+      current = removeFromInventory(current, action.piece);
+    } else {
+      current = deductPurchaseCost(current, action.piece);
+    }
 
     // Update FEN with the placed piece
     const setup = parseFen(current.fen);
@@ -124,6 +140,23 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
       fen: newFen,
       turn: actingPlayer === 'white' ? 'black' : 'white',
     };
+  } else if (action.type === 'equip') {
+    const equipError = validateEquip(current, action.item, action.square);
+    if (equipError) {
+      return makeError('INVALID_ACTION', equipError);
+    }
+
+    // applyEquip handles gold deduction, inventory removal, equipment placement,
+    // and crown promotion. Does NOT consume the turn.
+    current = applyEquip(current, action.item, action.square);
+  } else if (action.type === 'hit-loot-box') {
+    const hitError = validateHit(current, action.pieceSquare, action.lootBoxSquare);
+    if (hitError) {
+      return makeError('INVALID_ACTION', hitError);
+    }
+
+    // applyHit handles hit counting, opening, reward distribution, and turn consumption
+    current = applyHit(current, action.pieceSquare, action.lootBoxSquare);
   }
 
   // 4. Record action
@@ -171,7 +204,7 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
   }
 
   // Check mode-specific win conditions
-  if (current.status !== 'checkmate' && current.status !== 'stalemate') {
+  if (current.status !== 'checkmate' && current.status !== 'stalemate' && current.status !== 'draw') {
     if (winConditions.includes('all-converted')) {
       const winner = checkAllConverted(current);
       if (winner) {
@@ -181,6 +214,24 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
           winner,
         };
       }
+    }
+
+    if (winConditions.includes('loot-boxes-collected')) {
+      const winner = checkLootBoxesCollected(current);
+      if (winner) {
+        current = {
+          ...current,
+          status: 'checkmate',
+          winner,
+        };
+      }
+    }
+  }
+
+  // 7. Spawn loot box (after all status checks, at very end)
+  if (current.status === 'active' || current.status === 'check') {
+    if (shouldSpawnLootBox(current)) {
+      current = spawnLootBox(current);
     }
   }
 

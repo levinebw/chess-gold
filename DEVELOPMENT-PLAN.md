@@ -91,47 +91,86 @@ GCP Cloud Run + Socket.IO. See `tasks/PHASE-4-INFRA-DECISION.md` for architectur
 
 ---
 
-## Phase 5 — Bot Opponent (`v0.5`) 🔲 TASKS NOT YET DEFINED
+## Phase 5 — Bot Opponent (`v0.5`) ✅ COMPLETE
 
-Heuristic AI for single-player mode.
+Heuristic AI for single-player mode with three difficulty levels.
 
-**Planned scope (from ARCHITECTURE.md):**
-- Heuristic AI (not strong, just functional)
-- Material evaluation + simple lookahead
-- Gold spending strategy (when to buy, what to buy)
-- Difficulty levels (easy / medium)
+| Task | Role | Title | Status |
+|------|------|-------|--------|
+| 024 | Lead Dev | Last Move Highlight for Piece Placements | ✅ Complete |
+| 025 | Lead Dev | Resign and Draw Buttons | ✅ Complete |
+| 026 | Lead Dev | Bot Engine: Core AI Module | ✅ Complete |
+| 027 | Game Designer | Bot Personas: Lizzie, Maxi, Mona | ✅ Complete |
+| 028 | Lead Dev | Bot Game Mode: UI Integration | ✅ Complete |
+| 029 | QA | Bot Engine Unit Tests | ✅ Complete |
+| 030 | QA | Bot Playtest: Full Integration Testing | ✅ Complete |
 
-**Team:** Lead Developer or Game/Logic Engineer
+**What was built:**
+- Minimax search with alpha-beta pruning + quiescence search
+- Material, positional, center control, and king safety evaluation
+- Gold spending strategy (persona-weighted buy vs. move decisions)
+- Three bot personas: Lizzie (easy, depth 1), Maxi (medium, depth 2), Mona (hard, depth 3)
+- Bot game mode UI with persona selector, thinking indicator, auto-play, double undo
+- Premove support (Chessground built-in premovable)
+- 20 bot engine tests
+
+**Performance work (post-playtest):**
+- Time budget (2s deadline) flowing through all search functions
+- Single FEN parse per move generation (`TaggedMove` interface)
+- Lightweight `applyMoveForSearch` bypassing game.ts (3x faster per node)
+- Position fallback for variant FENs (Conqueror mode compatibility)
+- Quiescence depth reduced from 3 to 2
 
 ---
 
-## Phase 6 — Conqueror Chess + Standard Chess (`v0.6`) 🔲 TASKS NOT YET DEFINED
+## Phase 6 — Conqueror Chess + Standard Chess (`v0.6`) ✅ COMPLETE
 
-Game modes 4 and 9.
+Game modes 4 and 9. Mode selector UI.
 
-**Planned scope:**
-- Game mode selector in UI
-- **Standard Chess (mode 9):** All custom flags off, `standardStart: true` — baseline "just play chess"
-- **Conqueror Chess (mode 4):** Standard starting positions, no gold economy. Captured pieces change color. Win condition: `all-converted`
-- Piece conversion engine logic (reusable for King's Chess later)
+| Task | Role | Title | Status |
+|------|------|-------|--------|
+| — | Lead Dev | Mode Selector UI (ModeSelector.tsx) | ✅ Complete |
+| — | Lead Dev | Standard Chess Mode (no gold, standard start) | ✅ Complete |
+| — | Lead Dev | Conqueror Chess: Piece Conversion Engine | ✅ Complete |
+| — | Lead Dev | Conqueror Chess: All-Converted Win Condition | ✅ Complete |
+| — | Lead Dev | No-Economy UI Mode (hide shop/gold when goldEconomy=false) | ✅ Complete |
+| — | QA | Mode Integration Testing + Mobile Responsive | ✅ Complete |
 
-**Team:** Lead Developer + QA Engineer
+**What was built:**
+- Mode selector in lobby with all 9 mode presets defined in config
+- Piece conversion logic in `applyMove` (captured piece → attacker's origin, switches color)
+- `checkAllConverted` win condition checker
+- `createPosition` fallback for variant positions (pawns on back rank, piece overflow)
+- Bot compatibility across all modes
+- Mobile responsive fixes for no-economy board sizing
+
+> Phase 6 tasks were not formally numbered (implemented ad hoc during Phase 5 work).
 
 ---
 
-## Phase 7 — Loot Boxes (`v0.7`) 🔲 TASKS NOT YET DEFINED
+## Phase 7 — Loot Boxes (`v0.7`) 🔄 TASKS DEFINED
 
 Game mode 2 — the signature Chess Gold mode with loot boxes and items.
 
-**Planned scope:**
-- Loot box spawning (every 4 rounds, max 1 on board)
-- Hitting mechanics (3 hits to open, 1 for queen, pawns hit adjacent)
-- Opening and reward distribution (weighted drop table)
-- Item system: Crossbow, Turtle Shell, Crown
-- **Piece identity layer** — unique IDs for equipment tracking
-- Inventory + equipment UI
-- Alternate win condition: collect 6 loot boxes
-- Two Kings rule (if king from loot box — pending spec clarification)
+| Task | Role | Title | Status |
+|------|------|-------|--------|
+| 031 | Lead Dev | Loot Box Core Engine: Spawn, Hit, Open, Reward | 🔲 Pending |
+| 032 | QA | Loot Box Core Engine Tests | 🔲 Pending |
+| 033 | Lead Dev | Inventory + Equipment Engine | 🔲 Pending |
+| 034 | QA | Inventory + Equipment Tests | 🔲 Pending |
+| 035 | Lead Dev | Loot Box Mode UI | 🔲 Pending |
+| 036 | QA | Loot Box Mode Playtest | 🔲 Pending |
+
+**Dependencies:**
+- Task 031 → 032 (tests follow core engine)
+- Task 031 → 033 (inventory/equipment builds on loot box rewards)
+- Tasks 031 + 033 → 034 (equipment tests need both systems)
+- Tasks 031 + 033 → 035 (UI needs both engine systems)
+- Task 035 → 036 (playtest needs UI)
+
+**Design decisions needed:**
+- Two Kings rule: if king from loot box drop table (0.01% weight), treat as queen or implement second-king rules?
+- Crossbow exact mechanic: ranged capture without moving? Extended move range? Shoot-adjacent?
 
 **Team:** Lead Developer + QA Engineer
 
@@ -209,9 +248,9 @@ Game modes 7 and 8.
 | 2 | v0.2 | UI/UX Polish | 011-016, 022 | ✅ Complete |
 | 3 | v0.3 | Web Deployment | (009, 011) | ✅ Complete |
 | 4 | v0.4 | Online Multiplayer | 017-021 | ✅ Complete |
-| 5 | v0.5 | Bot Opponent | — | 🔲 Not defined |
-| 6 | v0.6 | Conqueror + Standard Chess | — | 🔲 Not defined |
-| 7 | v0.7 | Loot Boxes | — | 🔲 Not defined |
+| 5 | v0.5 | Bot Opponent | 024-030 | ✅ Complete |
+| 6 | v0.6 | Conqueror + Standard Chess | (unnumbered) | ✅ Complete |
+| 7 | v0.7 | Loot Boxes | 031-036 | 🔄 Defined |
 | 8 | v1.0 | Full Platform | — | 🔲 Not defined |
 | 9 | v1.1 | King's Chess + Gold Mine | — | 🔲 Not defined |
 | 10 | v1.2 | Siege | — | 🔲 Not defined |

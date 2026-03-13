@@ -21,6 +21,11 @@ const AVAILABLE_MODES = [
     icon: '♛',
   },
   {
+    key: 'loot-boxes',
+    description: 'Collect loot boxes for gold, pieces, and equipment. First to 6 wins!',
+    icon: '🎁',
+  },
+  {
     key: 'standard',
     description: 'Classic chess with standard starting positions.',
     icon: '♔',

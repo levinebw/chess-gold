@@ -2,6 +2,7 @@
 
 import { parseFen } from 'chessops/fen';
 import type { Color, GameState, WinConditionChecker } from './types.ts';
+import { CHESS_GOLD_CONFIG } from './config.ts';
 
 /**
  * Check if all non-king pieces on the board belong to one color.
@@ -42,6 +43,20 @@ export function checkAllConverted(state: GameState): Color | null {
   return null;
 }
 
+/**
+ * Check if any player has collected enough loot boxes to win.
+ * Returns the winning color, or null.
+ */
+export function checkLootBoxesCollected(state: GameState): Color | null {
+  const { boxesToWin } = CHESS_GOLD_CONFIG.lootBox;
+
+  if (state.lootBoxesCollected.white >= boxesToWin) return 'white';
+  if (state.lootBoxesCollected.black >= boxesToWin) return 'black';
+
+  return null;
+}
+
 export const WIN_CONDITION_CHECKERS: Partial<Record<string, WinConditionChecker>> = {
   'all-converted': checkAllConverted,
+  'loot-boxes-collected': checkLootBoxesCollected,
 };

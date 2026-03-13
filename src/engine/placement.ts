@@ -1,6 +1,6 @@
 import { Chess } from 'chessops/chess';
 import { parseFen } from 'chessops/fen';
-import type { GameState, PurchasableRole, Square } from './types.ts';
+import type { GameState, PurchasableRole, Role, Square } from './types.ts';
 import { CHESS_GOLD_CONFIG } from './config.ts';
 import { isInCheck } from './position.ts';
 
@@ -87,4 +87,31 @@ export function placementResolvesCheck(state: GameState, piece: PurchasableRole,
   if (pos.isErr) return false;
 
   return true;
+}
+
+// --- Inventory helpers ---
+
+export function hasInInventory(state: GameState, piece: Role): boolean {
+  return state.inventory[state.turn].some(
+    inv => inv.type === 'piece' && inv.pieceType === piece,
+  );
+}
+
+export function removeFromInventory(state: GameState, piece: Role): GameState {
+  const player = state.turn;
+  const idx = state.inventory[player].findIndex(
+    inv => inv.type === 'piece' && inv.pieceType === piece,
+  );
+  if (idx === -1) return state;
+
+  const newInventory = [...state.inventory[player]];
+  newInventory.splice(idx, 1);
+
+  return {
+    ...state,
+    inventory: {
+      ...state.inventory,
+      [player]: newInventory,
+    },
+  };
 }

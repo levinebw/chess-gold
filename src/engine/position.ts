@@ -3,6 +3,12 @@ import { parseFen, makeFen } from 'chessops/fen';
 import type { Role as ChessopsRole } from 'chessops';
 import type { GameState, Square, Role } from './types.ts';
 import { awardCaptureReward } from './gold.ts';
+import {
+  transferEquipment,
+  removeEquipment,
+  hasTurtleShell,
+  decrementTurtleShell,
+} from './equipment.ts';
 
 function createPosition(fen: string): Chess {
   const setup = parseFen(fen);
@@ -70,6 +76,20 @@ export function applyMove(state: GameState, from: Square, to: Square, promotion?
     capturedSquare = state.turn === 'white' ? to - 8 : to + 8;
   }
 
+  // --- Turtle Shell check: defender's piece survives, attacker bounces back ---
+  if (isCapture && capturedPiece && hasTurtleShell(state.equipment, to)) {
+    // Turtle shell absorbs the capture: attacker returns to origin, defender stays
+    const newEquipment = decrementTurtleShell(state.equipment, to);
+
+    // Board doesn't change (attacker bounced back, defender stays)
+    // But we still flip turn
+    return {
+      ...state,
+      equipment: newEquipment,
+      turn: state.turn === 'white' ? 'black' : 'white',
+    };
+  }
+
   let newFen: string;
 
   if (state.modeConfig.pieceConversion && isCapture && capturedRole !== null && capturedSquare !== null) {
@@ -122,6 +142,43 @@ export function applyMove(state: GameState, from: Square, to: Square, promotion?
   } else if (isEnPassant) {
     newState = awardCaptureReward(newState, 'pawn');
   }
+
+  // --- Equipment movement ---
+  let newEquipment = newState.equipment;
+
+  if (isCapture) {
+    // Defender's equipment is destroyed on capture
+    newEquipment = removeEquipment(newEquipment, to);
+
+    if (isEnPassant && capturedSquare !== null) {
+      newEquipment = removeEquipment(newEquipment, capturedSquare as Square);
+    }
+  }
+
+  // Transfer attacker's equipment from origin to destination
+  newEquipment = transferEquipment(newEquipment, from, to);
+
+  // For piece conversion: attacker equipment went to 'to', converted piece at 'from'
+  // has no equipment (equipment follows the attacker, not the square)
+
+  // Castling: move rook's equipment too
+  if (movingPiece?.role === 'king' && Math.abs(from - to) === 2) {
+    // Kingside: rook from h-file to f-file; Queenside: rook from a-file to d-file
+    const rank = Math.floor(from / 8);
+    if (to > from) {
+      // Kingside
+      const rookFrom = (rank * 8 + 7) as Square;
+      const rookTo = (rank * 8 + 5) as Square;
+      newEquipment = transferEquipment(newEquipment, rookFrom, rookTo);
+    } else {
+      // Queenside
+      const rookFrom = (rank * 8 + 0) as Square;
+      const rookTo = (rank * 8 + 3) as Square;
+      newEquipment = transferEquipment(newEquipment, rookFrom, rookTo);
+    }
+  }
+
+  newState = { ...newState, equipment: newEquipment };
 
   // Now flip the turn
   newState = {

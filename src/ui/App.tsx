@@ -9,6 +9,9 @@ import { GameOverDialog } from './components/GameOverDialog.tsx';
 import { RulesDialog } from './components/RulesDialog.tsx';
 import { Lobby } from './components/Lobby.tsx';
 import { OnlineStatusBar } from './components/OnlineGameView.tsx';
+import { InventoryPanel } from './components/InventoryPanel.tsx';
+import { LootBoxReward } from './components/LootBoxReward.tsx';
+import { LootBoxCounter } from './components/LootBoxCounter.tsx';
 import { useGameContext } from './context/GameContext.tsx';
 import { useOnlineGame } from './hooks/useOnlineGame.ts';
 import { GoldCoin } from './components/GoldCoin.tsx';
@@ -90,11 +93,14 @@ function GameView({ isOnline, onLeave }: { isOnline: boolean; onLeave?: () => vo
         {showEconomy && (
           <div className="side-panel">
             <GoldDisplay />
+            <LootBoxCounter />
             <Shop />
+            <InventoryPanel />
           </div>
         )}
         <ActionHistory />
       </div>
+      <LootBoxReward />
       <GameOverDialog />
       {showRules && <RulesDialog onClose={() => setShowRules(false)} />}
     </div>
