@@ -5,7 +5,6 @@ import { makeSquare } from 'chessops';
 import type {
   GameState,
   Square,
-  SquareName,
   ItemType,
   EquippedItem,
   Color,
