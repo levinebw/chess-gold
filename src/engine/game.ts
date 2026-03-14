@@ -196,10 +196,12 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
       status: 'stalemate',
     };
   } else {
-    // Threefold repetition
-    const count = newHistory.filter(f => f === normalizedFen).length;
-    if (count >= 3) {
-      current = { ...current, status: 'draw' };
+    // Threefold repetition (skip in loot box mode — win condition is collection, not positional)
+    if (!current.modeConfig.lootBoxes) {
+      const count = newHistory.filter(f => f === normalizedFen).length;
+      if (count >= 3) {
+        current = { ...current, status: 'draw' };
+      }
     }
   }
 
