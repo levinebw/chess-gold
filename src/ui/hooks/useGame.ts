@@ -21,6 +21,7 @@ export function useGame(modeConfig?: GameModeConfig) {
   const [placingFromInventory, setPlacingFromInventory] = useState(false);
   const [equippingItem, setEquippingItem] = useState<ItemType | null>(null);
   const [hittingPieceSquare, setHittingPieceSquare] = useState<Square | null>(null);
+  const [selectingHitPiece, setSelectingHitPiece] = useState(false);
   const [lastReward, setLastReward] = useState<LootBoxRewardInfo | null>(null);
   const [boardOrientation, setBoardOrientation] = useState<'white' | 'black'>('white');
 
@@ -65,6 +66,7 @@ export function useGame(modeConfig?: GameModeConfig) {
     setPlacingFromInventory(false);
     setEquippingItem(null);
     setHittingPieceSquare(null);
+    setSelectingHitPiece(false);
   }, []);
 
   const undo = useCallback(() => {
@@ -77,6 +79,7 @@ export function useGame(modeConfig?: GameModeConfig) {
       setPlacingFromInventory(false);
       setEquippingItem(null);
       setHittingPieceSquare(null);
+      setSelectingHitPiece(false);
       return h.slice(0, -1);
     });
   }, []);
@@ -91,6 +94,7 @@ export function useGame(modeConfig?: GameModeConfig) {
     setPlacingFromInventory(false);
     setEquippingItem(null);
     setHittingPieceSquare(null);
+    setSelectingHitPiece(false);
     setLastReward(null);
   }, [modeConfig, startingGold]);
 
@@ -145,6 +149,7 @@ export function useGame(modeConfig?: GameModeConfig) {
     setPlacingFromInventory(false);
     setEquippingItem(null);
     setHittingPieceSquare(null);
+    setSelectingHitPiece(false);
   }, []);
 
   const dismissReward = useCallback(() => {
@@ -200,9 +205,20 @@ export function useGame(modeConfig?: GameModeConfig) {
     }).filter(h => h.pieceSquares.length > 0);
   }, [state]);
 
-  // Start hit mode: select a piece to hit with
+  // Enter hit selection mode (show hittable pieces)
+  const startHitSelection = useCallback(() => {
+    setSelectingHitPiece(true);
+    setHittingPieceSquare(null);
+    setPlacingPiece(null);
+    setPlacingFromInventory(false);
+    setEquippingItem(null);
+    setError(null);
+  }, []);
+
+  // Select a specific piece to hit with
   const startHit = useCallback((pieceSquare: Square) => {
     setHittingPieceSquare(prev => prev === pieceSquare ? null : pieceSquare);
+    setSelectingHitPiece(false);
     setPlacingPiece(null);
     setPlacingFromInventory(false);
     setEquippingItem(null);
@@ -239,8 +255,10 @@ export function useGame(modeConfig?: GameModeConfig) {
     flipBoard: useCallback(() => setBoardOrientation(o => o === 'white' ? 'black' : 'white'), []),
     // Loot box hit
     hittableLootBoxes,
+    selectingHitPiece,
     hittingPieceSquare,
     hitTargets,
+    startHitSelection,
     startHit,
     // Equip
     equippingItem,

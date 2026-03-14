@@ -62,6 +62,7 @@ export function Board() {
   const equippingItem = 'equippingItem' in ctx ? ctx.equippingItem as ItemType | null : null;
   const equipTargets = 'equipTargets' in ctx ? ctx.equipTargets as Square[] : [];
   const hittableLootBoxes = 'hittableLootBoxes' in ctx ? ctx.hittableLootBoxes as { lootBoxSquare: Square; pieceSquares: Square[] }[] : [];
+  const selectingHitPiece = 'selectingHitPiece' in ctx ? ctx.selectingHitPiece as boolean : false;
   const hittingPieceSquare = 'hittingPieceSquare' in ctx ? ctx.hittingPieceSquare as Square | null : null;
   const hitTargets = 'hitTargets' in ctx ? ctx.hitTargets as Square[] : [];
   const startHit = 'startHit' in ctx ? ctx.startHit as (sq: Square) => void : undefined;
@@ -117,7 +118,7 @@ export function Board() {
     if (!cgRef.current) return;
 
     const isGameOver = state.status === 'checkmate' || state.status === 'stalemate' || state.status === 'draw';
-    const blocked = !!placingPiece || !!pendingPromotion || !!equippingItem || hittingPieceSquare !== null || isGameOver;
+    const blocked = !!placingPiece || !!pendingPromotion || !!equippingItem || selectingHitPiece || hittingPieceSquare !== null || isGameOver;
 
     // Extract last move for highlighting
     const lastAction = state.actionHistory[state.actionHistory.length - 1];
@@ -146,7 +147,7 @@ export function Board() {
     if (!blocked && state.turn === boardOrientation) {
       setTimeout(() => cgRef.current?.playPremove(), 1);
     }
-  }, [state, legalDests, placingPiece, pendingPromotion, equippingItem, hittingPieceSquare, error, boardOrientation]);
+  }, [state, legalDests, placingPiece, pendingPromotion, equippingItem, selectingHitPiece, hittingPieceSquare, error, boardOrientation]);
 
   // Play sounds on state changes
   const prevActionCount = useRef(state.actionHistory.length);
@@ -205,6 +206,19 @@ export function Board() {
       }
     }
 
+    // Hit piece selection highlights (all pieces that can hit a loot box)
+    if (selectingHitPiece && hittableLootBoxes.length > 0) {
+      const allPieces = new Set<Square>();
+      for (const hittable of hittableLootBoxes) {
+        for (const sq of hittable.pieceSquares) {
+          allPieces.add(sq);
+        }
+      }
+      for (const sq of allPieces) {
+        shapes.push({ orig: squareToKey(sq), brush: 'green' });
+      }
+    }
+
     // Hit target highlights (loot box squares hittable by selected piece)
     if (hittingPieceSquare !== null && hitTargets.length > 0) {
       for (const sq of hitTargets) {
@@ -245,7 +259,7 @@ export function Board() {
     }
 
     return shapes;
-  }, [placingPiece, placementSquares, equippingItem, equipTargets, hittingPieceSquare, hitTargets, state.lootBoxes, state.equipment]);
+  }, [placingPiece, placementSquares, equippingItem, equipTargets, selectingHitPiece, hittableLootBoxes, hittingPieceSquare, hitTargets, state.lootBoxes, state.equipment]);
 
   // Apply auto-shapes
   useEffect(() => {
@@ -259,14 +273,14 @@ export function Board() {
       if (e.key === 'Escape') {
         if (pendingPromotion) {
           setPendingPromotion(null);
-        } else if (placingPiece || equippingItem || hittingPieceSquare !== null) {
+        } else if (placingPiece || equippingItem || selectingHitPiece || hittingPieceSquare !== null) {
           cancelPlacement();
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [placingPiece, equippingItem, hittingPieceSquare, cancelPlacement, pendingPromotion]);
+  }, [placingPiece, equippingItem, selectingHitPiece, hittingPieceSquare, cancelPlacement, pendingPromotion]);
 
   // Overlay click handler for placement, equip, and hit-loot-box
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -299,8 +313,8 @@ export function Board() {
       return;
     }
 
-    // Click on a piece adjacent to a loot box to enter hit mode
-    if (hittableLootBoxes.length > 0) {
+    // Hit piece selection mode: click on a piece to select it for hitting
+    if (selectingHitPiece && hittableLootBoxes.length > 0) {
       for (const hittable of hittableLootBoxes) {
         if (hittable.pieceSquares.includes(sq)) {
           startHit?.(sq);
@@ -328,7 +342,7 @@ export function Board() {
     // (pawn snaps back to pre-move position)
   };
 
-  const showOverlay = !!placingPiece || !!equippingItem || hittingPieceSquare !== null;
+  const showOverlay = !!placingPiece || !!equippingItem || selectingHitPiece || hittingPieceSquare !== null;
 
   return (
     <div className="board-wrapper">

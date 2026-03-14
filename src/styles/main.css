@@ -1226,9 +1226,6 @@ body {
 /* Loot Box Counter */
 
 .loot-counter {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding: 0.5rem 0.75rem;
   background: #252525;
   border-radius: 6px;
@@ -1262,18 +1259,46 @@ body {
   color: #555;
 }
 
-/* Hit Loot Box Button Area */
-
-.hit-lootbox-hint {
+.loot-counter-row {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
+}
+
+.loot-hit-controls {
+  margin-top: 0.4rem;
+}
+
+.hit-button {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
   background: #3a3520;
   border: 1px solid #d4a843;
-  border-radius: 6px;
-  font-size: 0.8rem;
+  border-radius: 4px;
   color: #d4a843;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.hit-button:hover:not(:disabled) {
+  background: #4a4528;
+}
+
+.hit-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.hit-button.cancel {
+  background: #3a2020;
+  border-color: #c44;
+  color: #c44;
+}
+
+.hit-button.cancel:hover {
+  background: #4a2828;
 }
 
 /* Bot thinking indicator */
