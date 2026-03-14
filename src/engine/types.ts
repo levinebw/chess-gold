@@ -32,6 +32,7 @@ export interface GameState {
 
   status: GameStatus;
   winner: Color | null;
+  winReason: WinReason | null;
 
   actionHistory: GameAction[];
 
@@ -41,6 +42,8 @@ export interface GameState {
 }
 
 export type GameStatus = 'active' | 'check' | 'checkmate' | 'stalemate' | 'draw';
+
+export type WinReason = 'checkmate' | 'all-converted' | 'loot-boxes-collected';
 
 // --- Game Mode System (ADR-005) ---
 

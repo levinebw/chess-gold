@@ -53,6 +53,7 @@ export function createInitialState(modeConfig?: GameModeConfig, startingGold?: n
     pendingLootPiece: null,
     status: 'active',
     winner: null,
+    winReason: null,
     actionHistory: [],
     positionHistory: [],
     modeConfig: config,
@@ -232,6 +233,7 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
       ...current,
       status: 'checkmate',
       winner: actingPlayer,
+      winReason: 'checkmate',
     };
   } else if (isStalemate(current)) {
     current = {
@@ -257,6 +259,7 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
           ...current,
           status: 'checkmate',
           winner,
+          winReason: 'all-converted',
         };
       }
     }
@@ -268,6 +271,7 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
           ...current,
           status: 'checkmate',
           winner,
+          winReason: 'loot-boxes-collected',
         };
       }
     }

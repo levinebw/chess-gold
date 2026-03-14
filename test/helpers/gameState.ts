@@ -27,6 +27,7 @@ const DEFAULT_STATE: GameState = {
 
   status: 'active',
   winner: null,
+  winReason: null,
 
   actionHistory: [],
 

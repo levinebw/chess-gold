@@ -1,4 +1,17 @@
 import { useGameContext } from '../context/GameContext.tsx';
+import type { Color, WinReason } from '../../engine/types.ts';
+
+function winMessage(winner: Color, reason: WinReason | null): string {
+  const name = winner === 'white' ? 'White' : 'Black';
+  switch (reason) {
+    case 'loot-boxes-collected':
+      return `${name} collected all the loot boxes and wins!`;
+    case 'all-converted':
+      return `${name} conquered all pieces and wins!`;
+    default:
+      return `Checkmate! ${name} wins!`;
+  }
+}
 
 export function GameOverDialog() {
   const ctx = useGameContext();
@@ -30,7 +43,7 @@ export function GameOverDialog() {
         <h2>Game Over</h2>
         <p className="game-over-result">
           {state.status === 'checkmate'
-            ? `Checkmate! ${state.winner === 'white' ? 'White' : 'Black'} wins!`
+            ? winMessage(state.winner!, state.winReason)
             : state.status === 'draw'
             ? 'Draw — Threefold Repetition'
             : 'Stalemate — Draw'}
