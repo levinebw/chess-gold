@@ -5,7 +5,7 @@ import { awardTurnIncome, canAffordPiece, deductPurchaseCost } from './gold.ts';
 import { isValidPlacement, placementResolvesCheck, getValidPlacementSquares, hasInInventory, removeFromInventory } from './placement.ts';
 import { getLegalMoves, isInCheck, isCheckmate, isStalemate, applyMove } from './position.ts';
 import { checkAllConverted, checkLootBoxesCollected } from './win-conditions.ts';
-import { shouldSpawnLootBox, spawnLootBox, validateHit, applyHit } from './lootbox.ts';
+import { shouldSpawnLootBox, spawnLootBox, validateHit, applyHit, autoHitAfterMove } from './lootbox.ts';
 import { validateEquip, applyEquip } from './equipment.ts';
 
 const PURCHASABLE_PIECES: Array<import('./types.ts').PurchasableRole> = ['pawn', 'knight', 'bishop', 'rook', 'queen'];
@@ -89,6 +89,10 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
       return makeError('ILLEGAL_MOVE', 'Illegal move');
     }
 
+    // Capture pre-move board for auto-hit check
+    const preMoveSetup = parseFen(current.fen);
+    const preMoveBoard = preMoveSetup.isOk ? preMoveSetup.value.board : null;
+
     // applyMove handles capture gold, turn flip, and promotion (via chessops play)
     current = applyMove(current, action.from, action.to, action.promotion);
 
@@ -101,6 +105,11 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
           [actingPlayer]: current.gold[actingPlayer] - CHESS_GOLD_CONFIG.promotionCost,
         },
       };
+    }
+
+    // Auto-hit: if piece was attacking a loot box and landed adjacent, hit it
+    if (preMoveBoard) {
+      current = autoHitAfterMove(current, action.from, action.to, preMoveBoard);
     }
 
   } else if (action.type === 'place') {
