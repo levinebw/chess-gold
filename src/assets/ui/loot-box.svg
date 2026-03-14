@@ -1,0 +1,36 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Medieval Treasure Chest — Pristine State (3 hits remaining) -->
+  <defs>
+    <linearGradient id="lbWood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8b5e3c"/>
+      <stop offset="100%" stop-color="#6b3a1f"/>
+    </linearGradient>
+    <linearGradient id="lbLid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8b5e3c"/>
+      <stop offset="60%" stop-color="#4a2810"/>
+    </linearGradient>
+  </defs>
+  <!-- Body -->
+  <rect x="15" y="52" width="62" height="30" rx="3" fill="url(#lbWood)" stroke="#4a2810" stroke-width="1.5"/>
+  <!-- Horizontal wood plank lines -->
+  <line x1="15" y1="62" x2="77" y2="62" stroke="#4a2810" stroke-width="0.7" opacity="0.5"/>
+  <line x1="15" y1="72" x2="77" y2="72" stroke="#4a2810" stroke-width="0.7" opacity="0.5"/>
+  <!-- Gold base trim -->
+  <rect x="13" y="79" width="66" height="5" rx="1" fill="#d4a843" stroke="#a07828" stroke-width="0.8"/>
+  <!-- Gold band around body -->
+  <rect x="13" y="52" width="66" height="5" rx="1" fill="#d4a843" stroke="#a07828" stroke-width="0.8"/>
+  <!-- Lid (arched top) -->
+  <path d="M15,52 Q15,34 46,32 Q77,34 77,52 Z" fill="url(#lbLid)" stroke="#4a2810" stroke-width="1.5"/>
+  <!-- Gold lid band -->
+  <path d="M18,52 Q18,37 46,35 Q74,37 74,52" fill="none" stroke="#d4a843" stroke-width="3" opacity="0.8"/>
+  <!-- Gold clasp/lock -->
+  <rect x="40" y="50" width="12" height="10" rx="2" fill="#d4a843" stroke="#a07828" stroke-width="1"/>
+  <circle cx="46" cy="57" r="2.5" fill="#4a2810"/>
+  <!-- Corner studs -->
+  <circle cx="19" cy="55" r="2" fill="#d4a843" stroke="#a07828" stroke-width="0.5"/>
+  <circle cx="73" cy="55" r="2" fill="#d4a843" stroke="#a07828" stroke-width="0.5"/>
+  <circle cx="19" cy="78" r="2" fill="#d4a843" stroke="#a07828" stroke-width="0.5"/>
+  <circle cx="73" cy="78" r="2" fill="#d4a843" stroke="#a07828" stroke-width="0.5"/>
+  <!-- Subtle glow -->
+  <ellipse cx="46" cy="55" rx="20" ry="8" fill="#d4a843" opacity="0.08"/>
+</svg>
