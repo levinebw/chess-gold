@@ -28,6 +28,7 @@ export interface GameState {
   lootBoxes: LootBox[];
   lootBoxesCollected: Record<Color, number>;
   lastLootBoxReward: LootBoxReward | null;
+  pendingLootPiece: { player: Color; piece: PurchasableRole } | null;
 
   status: GameStatus;
   winner: Color | null;

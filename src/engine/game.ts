@@ -50,6 +50,7 @@ export function createInitialState(modeConfig?: GameModeConfig, startingGold?: n
     lootBoxes: [],
     lootBoxesCollected: { white: 0, black: 0 },
     lastLootBoxReward: null,
+    pendingLootPiece: null,
     status: 'active',
     winner: null,
     actionHistory: [],
@@ -66,6 +67,37 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
   // 1. Reject if game is over
   if (state.status === 'checkmate' || state.status === 'stalemate' || state.status === 'draw') {
     return makeError('GAME_OVER', 'Game is already over');
+  }
+
+  // 1b. Pending loot piece placement — must place it before any other action
+  if (state.pendingLootPiece) {
+    if (action.type !== 'place') {
+      return makeError('INVALID_ACTION', 'You must place your loot box piece first');
+    }
+    const { player, piece } = state.pendingLootPiece;
+    if (action.piece !== piece) {
+      return makeError('INVALID_PLACEMENT', `You must place the ${piece} from the loot box`);
+    }
+    if (!isValidPlacement(state, piece, action.square)) {
+      return makeError('INVALID_PLACEMENT', 'Invalid placement square');
+    }
+    if (isInCheck(state) && !placementResolvesCheck(state, piece, action.square)) {
+      return makeError('INVALID_PLACEMENT', 'Placement must resolve check');
+    }
+    // Place the piece (free), clear pending, and flip turn
+    const setup = parseFen(state.fen);
+    if (setup.isErr) return makeError('INVALID_ACTION', 'Invalid board state');
+    setup.value.board.set(action.square, { role: piece, color: player });
+    const nextTurn = player === 'white' ? 'black' : 'white';
+    setup.value.turn = nextTurn;
+    return {
+      ...state,
+      fen: makeFen(setup.value),
+      turn: nextTurn,
+      pendingLootPiece: null,
+      lastLootBoxReward: null,
+      actionHistory: [...state.actionHistory, action],
+    };
   }
 
   // 2. Clear previous loot box reward and award turn income

@@ -23,6 +23,7 @@ const DEFAULT_STATE: GameState = {
   lootBoxes: [],
   lootBoxesCollected: { white: 0, black: 0 },
   lastLootBoxReward: null,
+  pendingLootPiece: null,
 
   status: 'active',
   winner: null,

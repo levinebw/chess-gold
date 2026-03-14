@@ -1223,6 +1223,13 @@ body {
   color: #d4a843;
 }
 
+.loot-reward-desc {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-top: 0.2rem;
+  font-style: italic;
+}
+
 /* Loot Box Counter */
 
 .loot-counter {

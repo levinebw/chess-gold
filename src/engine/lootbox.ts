@@ -1,6 +1,6 @@
 // Loot box lifecycle: spawning, hit validation, opening, drop table rolling
 
-import { parseFen } from 'chessops/fen';
+import { parseFen, makeFen } from 'chessops/fen';
 import type { Board } from 'chessops/board';
 import type { Role } from 'chessops/types';
 import type {
@@ -187,12 +187,18 @@ export function applyHit(
     current = { ...current, lootBoxes: updatedBoxes };
   }
 
-  // Turn consumption: pawn hits do NOT consume the turn
-  if (!isPawn) {
-    current = {
-      ...current,
-      turn: state.turn === 'white' ? 'black' : 'white',
-    };
+  // Turn consumption: pawn hits do NOT consume the turn.
+  // If a piece reward is pending, keep the turn so the player can place it.
+  if (!isPawn && !current.pendingLootPiece) {
+    const nextTurn = state.turn === 'white' ? 'black' : 'white';
+    // Sync FEN turn with state.turn to prevent Chessground desync
+    const fenSetup = parseFen(current.fen);
+    if (fenSetup.isOk) {
+      fenSetup.value.turn = nextTurn;
+      current = { ...current, fen: makeFen(fenSetup.value), turn: nextTurn };
+    } else {
+      current = { ...current, turn: nextTurn };
+    }
   }
 
   return current;
@@ -238,13 +244,10 @@ function distributeReward(
     case 'piece': {
       // King from drop table -> treat as queen
       const pieceRole = reward.piece === 'king' ? 'queen' : reward.piece;
-      const item: InventoryItem = { type: 'piece', pieceType: pieceRole };
+      // Piece goes to pending placement, not inventory — player places it this turn
       return {
         ...state,
-        inventory: {
-          ...state.inventory,
-          [player]: [...state.inventory[player], item],
-        },
+        pendingLootPiece: { player, piece: pieceRole as import('./types.ts').PurchasableRole },
       };
     }
 
@@ -406,6 +409,17 @@ function applyAutoHit(
     current = { ...current, lootBoxes: updatedBoxes };
   }
 
-  // Do NOT flip turn — the move already consumed the turn
+  // Normally don't flip turn — the move already consumed it.
+  // But if a piece reward is pending, flip turn BACK to the hitter so they can place.
+  if (current.pendingLootPiece) {
+    const fenSetup = parseFen(current.fen);
+    if (fenSetup.isOk) {
+      fenSetup.value.turn = hitter;
+      current = { ...current, fen: makeFen(fenSetup.value), turn: hitter };
+    } else {
+      current = { ...current, turn: hitter };
+    }
+  }
+
   return current;
 }
