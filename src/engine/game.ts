@@ -49,6 +49,7 @@ export function createInitialState(modeConfig?: GameModeConfig, startingGold?: n
     equipment: {},
     lootBoxes: [],
     lootBoxesCollected: { white: 0, black: 0 },
+    lastLootBoxReward: null,
     status: 'active',
     winner: null,
     actionHistory: [],
@@ -67,9 +68,10 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
     return makeError('GAME_OVER', 'Game is already over');
   }
 
-  // 2. Award turn income (only for turn-consuming actions: move and place)
+  // 2. Clear previous loot box reward and award turn income
+  let current: GameState = { ...state, lastLootBoxReward: null };
   const consumesTurn = action.type === 'move' || action.type === 'place';
-  let current = consumesTurn ? awardTurnIncome(state) : state;
+  current = consumesTurn ? awardTurnIncome(current) : current;
   const actingPlayer = current.turn;
 
   // 3. Validate and apply action

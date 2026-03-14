@@ -27,6 +27,7 @@ export interface GameState {
 
   lootBoxes: LootBox[];
   lootBoxesCollected: Record<Color, number>;
+  lastLootBoxReward: LootBoxReward | null;
 
   status: GameStatus;
   winner: Color | null;
@@ -137,6 +138,11 @@ export type LootBoxDrop =
   | { contents: { type: 'gold'; amount: number }; weight: number }
   | { contents: { type: 'piece'; piece: Role }; weight: number }
   | { contents: { type: 'item'; item: ItemType }; weight: number };
+
+export interface LootBoxReward {
+  player: Color;
+  reward: LootBoxDrop['contents'];
+}
 
 // --- Game Configuration ---
 

@@ -7,11 +7,6 @@ import { validateHit } from '../../engine/lootbox.ts';
 import { CHESS_GOLD_CONFIG } from '../../engine/config.ts';
 import { parseFen } from 'chessops/fen';
 
-export interface LootBoxRewardInfo {
-  player: 'white' | 'black';
-  reward: { type: 'gold'; amount: number } | { type: 'piece'; piece: string } | { type: 'item'; item: string };
-}
-
 export function useGame(modeConfig?: GameModeConfig) {
   const [startingGold, setStartingGold] = useState(CHESS_GOLD_CONFIG.startingGold);
   const [state, setState] = useState<GameState>(() => createInitialState(modeConfig, startingGold));
@@ -22,7 +17,7 @@ export function useGame(modeConfig?: GameModeConfig) {
   const [equippingItem, setEquippingItem] = useState<ItemType | null>(null);
   const [hittingPieceSquare, setHittingPieceSquare] = useState<Square | null>(null);
   const [selectingHitPiece, setSelectingHitPiece] = useState(false);
-  const [lastReward, setLastReward] = useState<LootBoxRewardInfo | null>(null);
+  const [rewardDismissed, setRewardDismissed] = useState(false);
   const [boardOrientation, setBoardOrientation] = useState<'white' | 'black'>('white');
 
   const dispatch = useCallback((action: GameAction) => {
@@ -35,29 +30,11 @@ export function useGame(modeConfig?: GameModeConfig) {
       setError(null);
       setStateHistory(h => [...h, prev]);
 
-      // Detect loot box opening reward
       const newState = result as GameState;
-      if (action.type === 'hit-loot-box') {
-        const prevBoxCount = prev.lootBoxes.length;
-        const newBoxCount = newState.lootBoxes.length;
-        if (newBoxCount < prevBoxCount) {
-          // A box was opened - detect what reward was given
-          const player = prev.turn;
-          const goldDiff = newState.gold[player] - prev.gold[player];
-          const invDiff = newState.inventory[player].length - prev.inventory[player].length;
 
-          if (goldDiff > 0) {
-            // Remove the turn income (+1) from the diff since income is awarded before action
-            setLastReward({ player, reward: { type: 'gold', amount: goldDiff } });
-          } else if (invDiff > 0) {
-            const newItem = newState.inventory[player][newState.inventory[player].length - 1];
-            if (newItem.type === 'piece' && newItem.pieceType) {
-              setLastReward({ player, reward: { type: 'piece', piece: newItem.pieceType } });
-            } else if (newItem.type === 'item' && newItem.itemType) {
-              setLastReward({ player, reward: { type: 'item', item: newItem.itemType } });
-            }
-          }
-        }
+      // Show reward modal when a loot box is opened
+      if (newState.lastLootBoxReward) {
+        setRewardDismissed(false);
       }
 
       return newState;
@@ -95,7 +72,7 @@ export function useGame(modeConfig?: GameModeConfig) {
     setEquippingItem(null);
     setHittingPieceSquare(null);
     setSelectingHitPiece(false);
-    setLastReward(null);
+    setRewardDismissed(false);
   }, [modeConfig, startingGold]);
 
   // Compute legal move destinations for Chessground
@@ -153,7 +130,7 @@ export function useGame(modeConfig?: GameModeConfig) {
   }, []);
 
   const dismissReward = useCallback(() => {
-    setLastReward(null);
+    setRewardDismissed(true);
   }, []);
 
   // Get valid equip target squares (friendly non-king pieces without existing equipment)
@@ -265,7 +242,7 @@ export function useGame(modeConfig?: GameModeConfig) {
     equipTargets,
     startEquip,
     // Reward
-    lastReward,
+    lastReward: rewardDismissed ? null : state.lastLootBoxReward,
     dismissReward,
   };
 }

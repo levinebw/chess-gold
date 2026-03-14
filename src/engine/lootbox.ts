@@ -155,6 +155,12 @@ export function applyHit(
 
     current = distributeReward(current, lastHitBy, reward);
 
+    // Store reward for UI display
+    current = {
+      ...current,
+      lastLootBoxReward: { player: lastHitBy, reward },
+    };
+
     // Increment lootBoxesCollected
     current = {
       ...current,

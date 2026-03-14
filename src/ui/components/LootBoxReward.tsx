@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useGameContext } from '../context/GameContext.tsx';
-import type { LootBoxRewardInfo } from '../hooks/useGame.ts';
+import type { LootBoxReward as LootBoxRewardType } from '../../engine/types.ts';
 
 const PIECE_NAMES: Record<string, string> = {
   pawn: 'Pawn',
@@ -16,7 +16,7 @@ const ITEM_NAMES: Record<string, string> = {
   crown: 'Crown \uD83D\uDC51',
 };
 
-function rewardText(reward: LootBoxRewardInfo['reward']): string {
+function rewardText(reward: LootBoxRewardType['reward']): string {
   switch (reward.type) {
     case 'gold':
       return `${reward.amount} Gold`;
@@ -29,7 +29,7 @@ function rewardText(reward: LootBoxRewardInfo['reward']): string {
 
 export function LootBoxReward() {
   const ctx = useGameContext();
-  const lastReward = 'lastReward' in ctx ? ctx.lastReward as LootBoxRewardInfo | null : null;
+  const lastReward = 'lastReward' in ctx ? ctx.lastReward as LootBoxRewardType | null : null;
   const dismissReward = 'dismissReward' in ctx ? ctx.dismissReward as () => void : undefined;
 
   // Auto-dismiss after 3 seconds
