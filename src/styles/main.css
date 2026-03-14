@@ -1185,14 +1185,28 @@ body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 1rem 0.75rem 1.5rem;
   background: #2a2a2a;
   border: 2px solid #d4a843;
   border-radius: 10px;
   z-index: 200;
-  cursor: pointer;
   animation: toast-slide-in 0.3s ease-out;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.loot-reward-dismiss {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 0 0.3rem;
+  line-height: 1;
+  margin-left: 0.25rem;
+}
+
+.loot-reward-dismiss:hover {
+  color: #fff;
 }
 
 @keyframes toast-slide-in {

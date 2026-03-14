@@ -60,13 +60,16 @@ export function LootBoxReward() {
   const { title, desc } = rewardContent(lastReward.reward);
 
   return (
-    <div className="loot-reward-toast" onClick={dismissReward}>
+    <div className="loot-reward-toast">
       <div className="loot-reward-icon">{'\uD83C\uDF81'}</div>
       <div className="loot-reward-text">
         <div className="loot-reward-title">{colorLabel} opened a loot box!</div>
         <div className="loot-reward-content">Got: {title}</div>
         {desc && <div className="loot-reward-desc">{desc}</div>}
       </div>
+      <button className="loot-reward-dismiss" onClick={dismissReward} aria-label="Dismiss">
+        &times;
+      </button>
     </div>
   );
 }
