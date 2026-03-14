@@ -78,9 +78,9 @@ describe('Loot Box Engine', () => {
       expect(result.lootBoxes.length).toBe(1);
 
       const box = result.lootBoxes[0];
-      // Box square should be in ranks 3-6 (indices 16-47)
-      expect(box.square).toBeGreaterThanOrEqual(16);
-      expect(box.square).toBeLessThanOrEqual(47);
+      // Box square should be in ranks 4-5 (indices 24-39)
+      expect(box.square).toBeGreaterThanOrEqual(24);
+      expect(box.square).toBeLessThanOrEqual(39);
     });
 
     it('does not spawn on turn 1', () => {
@@ -482,8 +482,8 @@ describe('Loot Box Engine', () => {
       const boxRank = Math.floor(boxSquare / 8);
 
       // Find an adjacent square we can place a knight on (within white's zone: ranks 1-3)
-      // The box is in ranks 3-6 (indices 2-5). White can place in rows 1-3 (rank indices 0-2).
-      // If box is on rank 3 (index 2), an adjacent rank 2 square could work.
+      // The box is in ranks 4-5 (indices 3-4). White can place in rows 1-3 (rank indices 0-2).
+      // If box is on rank 4 (index 3), an adjacent rank 3 square could work.
 
       // Rather than fighting with adjacency, use a direct approach:
       // Place a white knight on a square adjacent to the box, then hit it.

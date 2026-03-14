@@ -62,8 +62,8 @@ function getEmptyMiddleSquares(state: GameState): Square[] {
   const lootBoxSquares = new Set(state.lootBoxes.map(lb => lb.square));
   const result: Square[] = [];
 
-  // Ranks 3-6 correspond to rows 2-5 in 0-indexed (squares 16-47)
-  for (let rank = 2; rank <= 5; rank++) {
+  // Ranks 4-5 correspond to rows 3-4 in 0-indexed
+  for (let rank = 3; rank <= 4; rank++) {
     for (let file = 0; file < 8; file++) {
       const sq = (rank * 8 + file) as Square;
       if (board.get(sq) === undefined && !lootBoxSquares.has(sq)) {
