@@ -31,11 +31,12 @@ function createPosition(fen: string): Chess {
 export function getLegalMoves(state: GameState): Map<Square, Square[]> {
   const pos = createPosition(state.fen);
   const allDests = pos.allDests();
+  const lootBoxSquares = new Set(state.lootBoxes.map(lb => lb.square));
   const result = new Map<Square, Square[]>();
   for (const [from, dests] of allDests) {
-    const squares: Square[] = [...dests];
+    const squares = ([...dests] as Square[]).filter(sq => !lootBoxSquares.has(sq));
     if (squares.length > 0) {
-      result.set(from as Square, squares as Square[]);
+      result.set(from as Square, squares);
     }
   }
   return result;

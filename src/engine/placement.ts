@@ -55,6 +55,9 @@ export function isValidPlacement(state: GameState, piece: PurchasableRole, squar
   const board = parseBoard(state.fen);
   if (board.get(square) !== undefined) return false;
 
+  // Cannot place on a loot box square
+  if (state.lootBoxes.some(lb => lb.square === square)) return false;
+
   return true;
 }
 
