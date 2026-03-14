@@ -14,28 +14,30 @@ const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? 'http://localhost:3001';
 
 const STARTING_GOLD_OPTIONS = [1, 3, 5, 10, 100];
 
+import { TreasureChestIcon } from './TreasureChestIcon.tsx';
+
 const AVAILABLE_MODES = [
   {
     key: 'chess-gold',
     description: 'Start with a king and gold. Buy pieces from the shop.',
-    icon: '♛',
+    icon: '♛' as React.ReactNode,
   },
   {
     key: 'loot-boxes',
     description: 'Collect loot boxes for gold, pieces, and equipment. First to 6 wins!',
-    icon: '🎁',
+    icon: (<TreasureChestIcon />) as React.ReactNode,
   },
   {
     key: 'standard',
     description: 'Classic chess with standard starting positions.',
-    icon: '♔',
+    icon: '♔' as React.ReactNode,
   },
   {
     key: 'conqueror',
     description: 'Captured pieces switch sides. Convert all pieces to win.',
-    icon: '⚔',
+    icon: '⚔' as React.ReactNode,
   },
-] as const;
+];
 
 interface Props {
   onLocalGame: (modeConfig: GameModeConfig) => void;
