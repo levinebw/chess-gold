@@ -188,8 +188,7 @@ export function applyHit(
   }
 
   // Turn consumption: pawn hits do NOT consume the turn.
-  // If a piece reward is pending, keep the turn so the player can place it.
-  if (!isPawn && !current.pendingLootPiece) {
+  if (!isPawn) {
     const nextTurn = state.turn === 'white' ? 'black' : 'white';
     // Sync FEN turn with state.turn to prevent Chessground desync
     const fenSetup = parseFen(current.fen);
@@ -244,10 +243,13 @@ function distributeReward(
     case 'piece': {
       // King from drop table -> treat as queen
       const pieceRole = reward.piece === 'king' ? 'queen' : reward.piece;
-      // Piece goes to pending placement, not inventory — player places it this turn
+      const item: InventoryItem = { type: 'piece', pieceType: pieceRole };
       return {
         ...state,
-        pendingLootPiece: { player, piece: pieceRole as import('./types.ts').PurchasableRole },
+        inventory: {
+          ...state.inventory,
+          [player]: [...state.inventory[player], item],
+        },
       };
     }
 
@@ -407,18 +409,6 @@ function applyAutoHit(
         : lb,
     );
     current = { ...current, lootBoxes: updatedBoxes };
-  }
-
-  // Normally don't flip turn — the move already consumed it.
-  // But if a piece reward is pending, flip turn BACK to the hitter so they can place.
-  if (current.pendingLootPiece) {
-    const fenSetup = parseFen(current.fen);
-    if (fenSetup.isOk) {
-      fenSetup.value.turn = hitter;
-      current = { ...current, fen: makeFen(fenSetup.value), turn: hitter };
-    } else {
-      current = { ...current, turn: hitter };
-    }
   }
 
   return current;

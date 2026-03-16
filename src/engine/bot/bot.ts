@@ -142,34 +142,6 @@ function findCheckEscapePlacement(state: GameState): PlaceAction | null {
 export function chooseAction(state: GameState, persona: BotPersona): GameAction {
   const botColor = state.turn;
 
-  // --- 0. Handle pending loot piece: must place it ---
-  if (state.pendingLootPiece && state.pendingLootPiece.player === botColor) {
-    const piece = state.pendingLootPiece.piece;
-    const squares = getValidPlacementSquares(state, piece);
-    if (squares.length > 0) {
-      // Pick the best square (prefer central squares)
-      let bestSq = squares[0];
-      let bestScore = -Infinity;
-      for (const sq of squares) {
-        const rank = Math.floor(sq / 8);
-        const file = sq % 8;
-        const centerDist = Math.abs(3.5 - file) + Math.abs(3.5 - rank);
-        const score = 7 - centerDist;
-        if (score > bestScore) {
-          bestScore = score;
-          bestSq = sq;
-        }
-      }
-      return {
-        type: 'place',
-        piece,
-        square: bestSq,
-        fromInventory: false,
-      };
-    }
-    // If no valid squares for pending piece, fall through (shouldn't happen)
-  }
-
   // --- 1. Check for free pawn loot box hits ---
   const { pawnHits, nonPawnHits } = findLootBoxHits(state);
 

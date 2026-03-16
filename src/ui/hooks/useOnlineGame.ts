@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Socket } from 'socket.io-client';
-import type { GameState, GameAction, GameError, PurchasableRole, Square, Color } from '../../engine/types.ts';
+import type { GameState, GameAction, GameError, PurchasableRole, Square, Color, ItemType } from '../../engine/types.ts';
 import { createInitialState } from '../../engine/game.ts';
 import { getLegalMoves } from '../../engine/position.ts';
 import { getValidPlacementSquares } from '../../engine/placement.ts';
+import { validateHit } from '../../engine/lootbox.ts';
 import { CHESS_GOLD_CONFIG } from '../../engine/config.ts';
+import { parseFen } from 'chessops/fen';
 import type { ClientEvents, ServerEvents, AuthResponse } from '../../server/protocol.ts';
 
 type TypedSocket = Socket<ServerEvents, ClientEvents>;
@@ -40,6 +42,11 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
   const [state, setState] = useState<GameState>(() => initialState ?? createInitialState());
   const [error, setError] = useState<GameError | null>(null);
   const [placingPiece, setPlacingPiece] = useState<PurchasableRole | null>(null);
+  const [placingFromInventory, setPlacingFromInventory] = useState(false);
+  const [equippingItem, setEquippingItem] = useState<ItemType | null>(null);
+  const [hittingPieceSquare, setHittingPieceSquare] = useState<Square | null>(null);
+  const [selectingHitPiece, setSelectingHitPiece] = useState(false);
+  const [rewardDismissed, setRewardDismissed] = useState(false);
   const [onlineStatus, setOnlineStatus] = useState<OnlineStatus>('playing');
   const [rematchRequested, setRematchRequested] = useState(false);
   const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
@@ -62,6 +69,10 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
       setState(newState);
       setError(null);
       setOnlineStatus('playing');
+      // Show reward modal when a loot box is opened
+      if (newState.lastLootBoxReward) {
+        setRewardDismissed(false);
+      }
     };
 
     const onActionError = (err: GameError) => {
@@ -143,6 +154,10 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
   // Dispatch action to server
   const dispatch = useCallback((action: GameAction) => {
     setPlacingPiece(null);
+    setPlacingFromInventory(false);
+    setEquippingItem(null);
+    setHittingPieceSquare(null);
+    setSelectingHitPiece(false);
     socketRef.current.emit('action', roomId, action);
   }, [roomId]);
 
@@ -170,11 +185,111 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
 
   const startPlacement = useCallback((piece: PurchasableRole) => {
     setPlacingPiece(prev => prev === piece ? null : piece);
+    setPlacingFromInventory(false);
+    setEquippingItem(null);
+    setHittingPieceSquare(null);
+    setSelectingHitPiece(false);
+    setError(null);
+  }, []);
+
+  const startInventoryPlacement = useCallback((piece: PurchasableRole) => {
+    setPlacingPiece(prev => prev === piece ? null : piece);
+    setPlacingFromInventory(true);
+    setEquippingItem(null);
+    setHittingPieceSquare(null);
+    setSelectingHitPiece(false);
     setError(null);
   }, []);
 
   const cancelPlacement = useCallback(() => {
     setPlacingPiece(null);
+    setPlacingFromInventory(false);
+    setEquippingItem(null);
+    setHittingPieceSquare(null);
+    setSelectingHitPiece(false);
+  }, []);
+
+  const dismissReward = useCallback(() => {
+    setRewardDismissed(true);
+  }, []);
+
+  // --- Loot box hit ---
+
+  const hittableLootBoxes = useMemo((): { lootBoxSquare: Square; pieceSquares: Square[] }[] => {
+    if (!state.modeConfig.lootBoxes) return [];
+    if (state.lootBoxes.length === 0) return [];
+
+    return state.lootBoxes.map(box => {
+      const adjacentPieces: Square[] = [];
+      const bFile = box.square % 8;
+      const bRank = Math.floor(box.square / 8);
+      for (let df = -1; df <= 1; df++) {
+        for (let dr = -1; dr <= 1; dr++) {
+          if (df === 0 && dr === 0) continue;
+          const nf = bFile + df;
+          const nr = bRank + dr;
+          if (nf < 0 || nf > 7 || nr < 0 || nr > 7) continue;
+          const sq = (nr * 8 + nf) as Square;
+          if (validateHit(state, sq, box.square) === null) {
+            adjacentPieces.push(sq);
+          }
+        }
+      }
+      return { lootBoxSquare: box.square, pieceSquares: adjacentPieces };
+    }).filter(h => h.pieceSquares.length > 0);
+  }, [state]);
+
+  const startHitSelection = useCallback(() => {
+    setSelectingHitPiece(true);
+    setHittingPieceSquare(null);
+    setPlacingPiece(null);
+    setPlacingFromInventory(false);
+    setEquippingItem(null);
+    setError(null);
+  }, []);
+
+  const startHit = useCallback((pieceSquare: Square) => {
+    setHittingPieceSquare(prev => prev === pieceSquare ? null : pieceSquare);
+    setSelectingHitPiece(false);
+    setPlacingPiece(null);
+    setPlacingFromInventory(false);
+    setEquippingItem(null);
+    setError(null);
+  }, []);
+
+  const hitTargets = useMemo((): Square[] => {
+    if (hittingPieceSquare === null) return [];
+    return hittableLootBoxes
+      .filter(h => h.pieceSquares.includes(hittingPieceSquare))
+      .map(h => h.lootBoxSquare);
+  }, [hittingPieceSquare, hittableLootBoxes]);
+
+  // --- Equip ---
+
+  const equipTargets = useMemo((): Square[] => {
+    if (!equippingItem) return [];
+    const setup = parseFen(state.fen);
+    if (setup.isErr) return [];
+    const board = setup.value.board;
+    const targets: Square[] = [];
+    const pieces = state.turn === 'white' ? board.white : board.black;
+    for (const sq of pieces) {
+      const piece = board.get(sq);
+      if (!piece || piece.role === 'king') continue;
+      const sqName = 'abcdefgh'[sq % 8] + (Math.floor(sq / 8) + 1);
+      if (state.equipment[sqName as keyof typeof state.equipment]) continue;
+      targets.push(sq as Square);
+    }
+    return targets;
+  }, [equippingItem, state]);
+
+  const startEquip = useCallback((item: ItemType) => {
+    setEquippingItem(prev => prev === item ? null : item);
+    setPlacingPiece(null);
+    setPlacingFromInventory(false);
+    setHittingPieceSquare(null);
+    setSelectingHitPiece(false);
+    setError(null);
   }, []);
 
   return {
@@ -186,8 +301,10 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
     canUndo: false,
     legalDests,
     placingPiece,
+    placingFromInventory,
     placementSquares,
     startPlacement,
+    startInventoryPlacement,
     cancelPlacement,
     canAfford,
     config: CHESS_GOLD_CONFIG,
@@ -195,6 +312,20 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
     setStartingGold: () => {},
     boardOrientation: myColor as 'white' | 'black',
     flipBoard: () => {},
+    // Loot box hit
+    hittableLootBoxes,
+    selectingHitPiece,
+    hittingPieceSquare,
+    hitTargets,
+    startHitSelection,
+    startHit,
+    // Equip
+    equippingItem,
+    equipTargets,
+    startEquip,
+    // Reward
+    lastReward: rewardDismissed ? null : state.lastLootBoxReward,
+    dismissReward,
     // Online-specific
     myColor,
     isMyTurn: state.turn === myColor,

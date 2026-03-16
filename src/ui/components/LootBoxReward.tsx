@@ -30,7 +30,7 @@ function rewardContent(reward: LootBoxRewardType['reward']): { title: string; de
     case 'gold':
       return { title: `${reward.amount} Gold`, desc: null };
     case 'piece':
-      return { title: PIECE_NAMES[reward.piece] || reward.piece, desc: 'Place it on the board this turn!' };
+      return { title: PIECE_NAMES[reward.piece] || reward.piece, desc: 'Added to your inventory.' };
     case 'item': {
       const info = ITEM_INFO[reward.item];
       return info

@@ -48,9 +48,9 @@ export const MONA: BotPersona = {
   avatar: '\u{1F436}', // dog face
   aggression: 0.7,
   greed: 0.3,
-  riskTolerance: 0.6,
+  riskTolerance: 0.5,
   piecePriority: { pawn: 2, knight: 2, bishop: 3, rook: 3, queen: 3 },
-  searchDepth: 3,
+  searchDepth: 4,
   randomness: 0.03,
 };
 

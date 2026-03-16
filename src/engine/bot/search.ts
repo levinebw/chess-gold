@@ -10,7 +10,7 @@ import type { BotPersona, EvaluationScore } from './types.ts';
 const MAX_QUIESCENCE_DEPTH = 2;
 
 /** Default time budget for move search (ms). */
-const DEFAULT_TIME_BUDGET_MS = 2000;
+const DEFAULT_TIME_BUDGET_MS = 2500;
 
 interface TaggedMove {
   action: MoveAction;

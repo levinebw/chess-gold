@@ -75,17 +75,6 @@ export function useGame(modeConfig?: GameModeConfig) {
     setRewardDismissed(false);
   }, [modeConfig, startingGold]);
 
-  // Auto-enter placement mode when a loot piece is pending
-  useEffect(() => {
-    if (state.pendingLootPiece) {
-      setPlacingPiece(state.pendingLootPiece.piece);
-      setPlacingFromInventory(true);
-      setEquippingItem(null);
-      setHittingPieceSquare(null);
-      setSelectingHitPiece(false);
-    }
-  }, [state.pendingLootPiece]);
-
   // Compute legal move destinations for Chessground
   const legalDests = useMemo(() => getLegalMoves(state), [state]);
 
@@ -133,14 +122,12 @@ export function useGame(modeConfig?: GameModeConfig) {
   }, []);
 
   const cancelPlacement = useCallback(() => {
-    // Can't cancel placement of a pending loot piece — must place it
-    if (state.pendingLootPiece) return;
     setPlacingPiece(null);
     setPlacingFromInventory(false);
     setEquippingItem(null);
     setHittingPieceSquare(null);
     setSelectingHitPiece(false);
-  }, [state.pendingLootPiece]);
+  }, []);
 
   const dismissReward = useCallback(() => {
     setRewardDismissed(true);

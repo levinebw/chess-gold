@@ -289,12 +289,12 @@ describe('Loot Box Engine', () => {
       expect(result.gold.white).toBe(10 + 3); // +3 gold reward
     });
 
-    it('piece reward sets pendingLootPiece instead of inventory', () => {
+    it('piece reward adds to inventory', () => {
       const state = createAlmostOpenState();
       // Need rng that lands on a piece drop (pawn: weight 18.75, cumulative 31.25-50)
       const result = applyHit(state, sq('c3'), sq('d4'), () => 0.32);
-      expect(result.inventory.white.length).toBe(0);
-      expect(result.pendingLootPiece).toEqual({ player: 'white', piece: 'pawn' });
+      expect(result.inventory.white.length).toBe(1);
+      expect(result.inventory.white[0]).toEqual({ type: 'piece', pieceType: 'pawn' });
     });
 
     it('item reward adds to correct players inventory', () => {
@@ -378,9 +378,9 @@ describe('Loot Box Engine', () => {
       });
 
       const result = applyHit(state, sq('c3'), sq('d4'), () => 0.99999);
-      // King should be converted to queen in pendingLootPiece
-      expect(result.inventory.white.length).toBe(0);
-      expect(result.pendingLootPiece).toEqual({ player: 'white', piece: 'queen' });
+      // King should be converted to queen in inventory
+      expect(result.inventory.white.length).toBe(1);
+      expect(result.inventory.white[0]).toEqual({ type: 'piece', pieceType: 'queen' });
     });
   });
 
