@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { GameState, GameAction, GameError, GameModeConfig, PurchasableRole, Square, ItemType } from '../../engine/types.ts';
 import { createInitialState, applyAction } from '../../engine/game.ts';
 import { getLegalMoves } from '../../engine/position.ts';
