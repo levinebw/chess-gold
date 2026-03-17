@@ -901,6 +901,21 @@ body {
   color: #e0e0e0;
 }
 
+/* GitHub link */
+
+.github-link {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  color: #555;
+  transition: color 0.15s;
+  line-height: 1;
+}
+
+.github-link:hover {
+  color: #e0e0e0;
+}
+
 /* Mode selector */
 
 .mode-selector {

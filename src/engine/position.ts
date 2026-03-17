@@ -32,9 +32,22 @@ export function getLegalMoves(state: GameState): Map<Square, Square[]> {
   const pos = createPosition(state.fen);
   const allDests = pos.allDests();
   const lootBoxSquares = new Set(state.lootBoxes.map(lb => lb.square));
+  const kingSquare = pos.board.kingOf(pos.turn);
   const result = new Map<Square, Square[]>();
   for (const [from, dests] of allDests) {
-    const squares = ([...dests] as Square[]).filter(sq => !lootBoxSquares.has(sq));
+    let squares = ([...dests] as Square[]).filter(sq => !lootBoxSquares.has(sq));
+    // Remap castling: chessops reports king→rook, UI needs king±2
+    if (kingSquare !== undefined && from === kingSquare) {
+      squares = squares.map(to => {
+        const fromFile = from % 8;
+        const toFile = to % 8;
+        if (Math.floor(from / 8) === Math.floor(to / 8) && Math.abs(toFile - fromFile) > 1) {
+          const newFile = fromFile + (toFile > fromFile ? 2 : -2);
+          return (Math.floor(from / 8) * 8 + newFile) as Square;
+        }
+        return to;
+      });
+    }
     if (squares.length > 0) {
       result.set(from as Square, squares);
     }
@@ -126,9 +139,19 @@ export function applyMove(state: GameState, from: Square, to: Square, promotion?
     newFen = makeFen(setup.value);
   } else {
     // Normal move (no piece conversion capture)
+    // Convert castling from king±2 back to king→rook for chessops
+    let playTo: number = to;
+    if (movingPiece?.role === 'king') {
+      const fromFile = from % 8;
+      const toFile = to % 8;
+      if (Math.abs(toFile - fromFile) === 2) {
+        const rank = Math.floor(from / 8);
+        playTo = toFile > fromFile ? rank * 8 + 7 : rank * 8;
+      }
+    }
     pos.play({
       from,
-      to,
+      to: playTo,
       promotion: promotion as ChessopsRole | undefined,
     });
 
