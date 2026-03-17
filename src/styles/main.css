@@ -8,6 +8,10 @@
   box-sizing: border-box;
 }
 
+html, body {
+  overflow-x: hidden;
+}
+
 body {
   font-family: system-ui, -apple-system, sans-serif;
   background: #1a1a1a;
@@ -1350,5 +1354,191 @@ body {
 
   .mode-card-icon {
     font-size: 2rem;
+  }
+}
+
+/* Phone breakpoint */
+
+@media (max-width: 480px) {
+  /* 1. Root & layout spacing */
+  #root {
+    padding: 0.5rem;
+  }
+
+  .game-layout,
+  .game-content {
+    gap: 0.6rem;
+  }
+
+  .side-panel {
+    gap: 0.6rem;
+  }
+
+  /* 2. Header — wrap to two rows */
+  .game-header {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .game-header h1 {
+    font-size: 1rem;
+    width: 100%;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .turn-indicator {
+    flex-direction: row;
+    gap: 0.4rem;
+    margin-left: auto;
+  }
+
+  /* 3. Touch targets — 44px minimum */
+  .undo-button,
+  .new-game-header-button {
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+  }
+
+  .rules-button,
+  .flip-button {
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
+  }
+
+  .mute-button {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 1.3rem;
+  }
+
+  .starting-gold-select {
+    min-height: 44px;
+  }
+
+  .shop-piece {
+    min-height: 44px;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .inventory-piece,
+  .inventory-item {
+    min-height: 44px;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .hit-button {
+    min-height: 44px;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .back-to-lobby {
+    min-height: 44px;
+    padding: 0.6rem 1rem;
+  }
+
+  /* 4. Board — maximize width */
+  .board-wrapper {
+    width: min(480px, calc(100vw - 1rem));
+  }
+
+  /* 5. Shop — 2-column grid */
+  .shop-pieces {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem;
+  }
+
+  /* 6. Inventory — 2-column grid */
+  .inventory-pieces,
+  .inventory-items {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem;
+  }
+
+  /* 7. Action history — compact */
+  .action-history {
+    max-height: 100px;
+  }
+
+  /* 8. Dialogs — responsive padding */
+  .rules-dialog {
+    max-width: calc(100vw - 2rem);
+    padding: 1rem;
+    max-height: 85vh;
+  }
+
+  .game-over-dialog {
+    padding: 1.5rem;
+    max-width: calc(100vw - 2rem);
+  }
+
+  .loot-reward-toast {
+    max-width: calc(100vw - 1rem);
+    padding: 0.6rem 0.75rem 0.6rem 1rem;
+  }
+
+  .loot-reward-icon {
+    font-size: 1.4rem;
+  }
+
+  /* 9. Lobby — 2x2 grid mode/bot cards */
+  .lobby-mode-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .lobby-bot-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .lobby {
+    padding: 1.5rem 0.75rem;
+  }
+
+  .lobby h1 {
+    font-size: 1.5rem;
+  }
+
+  /* 10. Online status bar */
+  .online-status-bar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Small phone breakpoint */
+
+@media (max-width: 360px) {
+  #root {
+    padding: 0.25rem;
+  }
+
+  .board-wrapper {
+    width: calc(100vw - 0.5rem);
+  }
+
+  .game-header h1 {
+    font-size: 0.9rem;
+  }
+
+  .shop-pieces {
+    grid-template-columns: 1fr;
+  }
+
+  .lobby-mode-cards,
+  .lobby-bot-cards {
+    grid-template-columns: 1fr;
   }
 }

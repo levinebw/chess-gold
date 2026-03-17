@@ -148,45 +148,55 @@ Game modes 4 and 9. Mode selector UI.
 
 ---
 
-## Phase 7 — Loot Boxes (`v0.7`) 🔄 TASKS DEFINED
+## Phase 7 — Loot Boxes (`v0.7`) ✅ COMPLETE
 
 Game mode 2 — the signature Chess Gold mode with loot boxes and items.
 
 | Task | Role | Title | Status |
 |------|------|-------|--------|
-| 031 | Lead Dev | Loot Box Core Engine: Spawn, Hit, Open, Reward | 🔲 Pending |
-| 032 | QA | Loot Box Core Engine Tests | 🔲 Pending |
-| 033 | Lead Dev | Inventory + Equipment Engine | 🔲 Pending |
-| 034 | QA | Inventory + Equipment Tests | 🔲 Pending |
-| 035 | Lead Dev | Loot Box Mode UI | 🔲 Pending |
-| 036 | QA | Loot Box Mode Playtest | 🔲 Pending |
+| 031 | Lead Dev | Loot Box Core Engine: Spawn, Hit, Open, Reward | ✅ Complete |
+| 032 | QA | Loot Box Core Engine Tests | ✅ Complete |
+| 033 | Lead Dev | Inventory + Equipment Engine | ✅ Complete |
+| 034 | QA | Inventory + Equipment Tests | ✅ Complete |
+| 035 | Lead Dev | Loot Box Mode UI | ✅ Complete |
+| 036 | QA | Loot Box Mode Playtest | ✅ Complete |
+| 037 | Visual Designer | Custom Loot Box Asset — Medieval Treasure Chest | ✅ Complete |
 
-**Dependencies:**
-- Task 031 → 032 (tests follow core engine)
-- Task 031 → 033 (inventory/equipment builds on loot box rewards)
-- Tasks 031 + 033 → 034 (equipment tests need both systems)
-- Tasks 031 + 033 → 035 (UI needs both engine systems)
-- Task 035 → 036 (playtest needs UI)
+**What was built:**
+- Loot box spawning (ranks 4-5, every 4 turns, max 1 active)
+- Hit mechanics (3 hits to open, queen opens in 1, pawn hits free)
+- Auto-hit when piece moves adjacent while already attacking
+- Drop table: gold (3-6g), pieces (to inventory), items (crossbow, turtle shell, crown)
+- Equipment system: equip items to pieces with gold cost and special effects
+- Custom 3-state treasure chest SVG (pristine → damaged → nearly open)
+- Loot box mode UI: hit button, inventory panel, reward toast, counter
+- Online multiplayer loot box support
+- Bot AI loot box targeting
+- Mode-aware rules dialog with loot box rules and item descriptions
+- Win condition: collect 6 loot boxes
 
-**Design decisions needed:**
-- Two Kings rule: if king from loot box drop table (0.01% weight), treat as queen or implement second-king rules?
-- Crossbow exact mechanic: ranged capture without moving? Extended move range? Shoot-adjacent?
+**Design decisions resolved:**
+- King from drop table (0.01% weight) → treated as queen
+- Crossbow: capture adjacent enemy without moving (costs 2g to equip)
+- Piece rewards go to inventory (not forced immediate placement)
 
-**Team:** Lead Developer + QA Engineer
+**Team:** Lead Developer + Visual Designer + QA Engineer
 
 ---
 
-## Phase 8 — Full Platform (`v1.0`) 🔲 TASKS NOT YET DEFINED
+## Phase 8 — Full Platform (`v1.0`) 🔄 IN PROGRESS
 
-Lobbies, ratings, profiles, game history.
+Mobile polish, ratings, profiles, game history.
 
-**Planned scope:**
-- Lobbies
-- Elo rating system
-- Rated vs. casual games
-- Player profiles
-- Game history / replay
-- Database (PostgreSQL or SQLite)
+| Task | Role | Title | Status |
+|------|------|-------|--------|
+| 038 | Lead Dev | Phase 8A: Mobile Fit & Finish | ✅ Complete |
+
+**Planned scope (remaining tasks TBD):**
+- 8A: Mobile fit & finish — phone-specific CSS breakpoints (480px, 360px), 44px touch targets, compact layouts
+- 8B: Persistent player identity — Firestore guest accounts, display names, localStorage tokens
+- 8C: Elo rating system — rated vs. casual, K-factor, per-mode ratings, post-game rating display, leaderboard
+- 8D: Player profiles — stats, rating history, recent matches, opponent info
 
 **Team:** Lead Developer + Backend Developer + QA Engineer
 
@@ -250,8 +260,8 @@ Game modes 7 and 8.
 | 4 | v0.4 | Online Multiplayer | 017-021 | ✅ Complete |
 | 5 | v0.5 | Bot Opponent | 024-030 | ✅ Complete |
 | 6 | v0.6 | Conqueror + Standard Chess | (unnumbered) | ✅ Complete |
-| 7 | v0.7 | Loot Boxes | 031-036 | 🔄 Defined |
-| 8 | v1.0 | Full Platform | — | 🔲 Not defined |
+| 7 | v0.7 | Loot Boxes | 031-037 | ✅ Complete |
+| 8 | v1.0 | Full Platform | 038+ | 🔄 In progress |
 | 9 | v1.1 | King's Chess + Gold Mine | — | 🔲 Not defined |
 | 10 | v1.2 | Siege | — | 🔲 Not defined |
 | 11 | v1.3 | Flashlight Modes | — | 🔲 Not defined |
