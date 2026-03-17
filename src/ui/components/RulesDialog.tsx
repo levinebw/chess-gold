@@ -9,20 +9,29 @@ export function RulesDialog({ onClose }: Props) {
   const { state } = useGameContext();
   const hasGold = state.modeConfig.goldEconomy;
   const hasLootBoxes = state.modeConfig.lootBoxes;
+  const hasConversion = state.modeConfig.pieceConversion;
+  const modeName = state.modeConfig.name;
+
+  let goal: string;
+  if (hasLootBoxes) {
+    goal = 'Collect 6 loot boxes to win, or checkmate your opponent.';
+  } else if (hasConversion && !hasGold) {
+    goal = 'Convert all of your opponent\'s pieces to your color.';
+  } else if (hasConversion) {
+    goal = 'Convert all of your opponent\'s pieces, or checkmate your opponent.';
+  } else {
+    goal = 'Checkmate your opponent\'s king.';
+  }
 
   return (
     <div className="rules-overlay" onClick={onClose}>
       <div className="rules-dialog" onClick={e => e.stopPropagation()}>
-        <h2>How to Play Chess Gold</h2>
+        <h2>How to Play {modeName}</h2>
 
         <div className="rules-content">
           <section>
             <h3>Goal</h3>
-            <p>
-              {hasLootBoxes
-                ? 'Collect 6 loot boxes to win, or checkmate your opponent.'
-                : 'Checkmate your opponent\'s king.'}
-            </p>
+            <p>{goal}</p>
           </section>
 
           {hasGold && (
@@ -58,6 +67,27 @@ export function RulesDialog({ onClose }: Props) {
                     <tr><td>Queen</td><td>8<GoldCoin/></td></tr>
                   </tbody>
                 </table>
+              </section>
+            </>
+          )}
+
+          {hasConversion && (
+            <>
+              <section>
+                <h3>Piece Conversion</h3>
+                <p>When you capture a piece, it isn't removed — it <strong>switches to your color</strong> and is placed on the square your piece came from.</p>
+              </section>
+
+              {!hasGold && (
+                <section>
+                  <h3>Starting Position</h3>
+                  <p>Standard chess starting position. No gold, no shop — just move pieces.</p>
+                </section>
+              )}
+
+              <section>
+                <h3>Winning</h3>
+                <p>Convert every one of your opponent's pieces to your color. Kings cannot be converted — focus on their army!</p>
               </section>
             </>
           )}
