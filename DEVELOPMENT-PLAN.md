@@ -197,7 +197,7 @@ Mobile polish, persistent identity, Elo ratings, player profiles.
 | 042 | Backend Dev | Elo Rating System | 8C | ✅ Complete |
 | 043 | Lead Dev | Post-Game Rating Display & Rated/Casual UI | 8C | ✅ Complete |
 | 044 | Lead Dev | Player Profiles & Leaderboard | 8D | ✅ Complete |
-| 059 | Backend Dev | Backend Deployment: Firestore + Updated Cloud Run | 8E | 🔲 Pending |
+| 059 | Backend Dev | Backend Deployment: Firestore + Updated Cloud Run | 8E | ✅ Complete |
 | 045 | QA | Phase 8 Regression & Integration Test | 8E | 🔲 Pending |
 
 **Dependencies:**

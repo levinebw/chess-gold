@@ -47,6 +47,11 @@ function GameView({ isOnline, onLeave }: { isOnline: boolean; onLeave?: () => vo
     <div className="game-layout">
       {isOnline && onLeave && <OnlineStatusBar onLeave={onLeave} />}
       <header className="game-header">
+        {!isOnline && onLeave && (
+          <button onClick={onLeave} className="back-to-lobby-header" title="Back to Lobby">
+            ← Lobby
+          </button>
+        )}
         <h1>{state.modeConfig.name}</h1>
         <div className="header-actions">
           {!isOnline && showEconomy && (
@@ -111,7 +116,6 @@ function BotGameWrapper({ persona, modeConfig, onLeave }: { persona: BotPersona;
   return (
     <BotGameProvider persona={persona} modeConfig={modeConfig}>
       <GameView isOnline={false} onLeave={onLeave} />
-      <button className="back-to-lobby" onClick={onLeave}>← Back to Lobby</button>
     </BotGameProvider>
   );
 }
@@ -174,7 +178,6 @@ export default function App() {
     content = (
       <GameProvider modeConfig={screen.modeConfig}>
         <GameView isOnline={false} onLeave={handleLeave} />
-        <button className="back-to-lobby" onClick={handleLeave}>← Back to Lobby</button>
       </GameProvider>
     );
   }
