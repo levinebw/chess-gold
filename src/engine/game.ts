@@ -70,7 +70,19 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
     return makeError('GAME_OVER', 'Game is already over');
   }
 
-  // 2. Clear previous loot box reward and award turn income
+  // 2. Handle resign immediately
+  if (action.type === 'resign') {
+    const winner = state.turn === 'white' ? 'black' : 'white';
+    return {
+      ...state,
+      status: 'checkmate',
+      winner,
+      winReason: 'resign',
+      actionHistory: [...state.actionHistory, action],
+    };
+  }
+
+  // 3. Clear previous loot box reward and award turn income
   let current: GameState = { ...state, lastLootBoxReward: null };
   const consumesTurn = action.type === 'move' || action.type === 'place';
   current = consumesTurn ? awardTurnIncome(current) : current;

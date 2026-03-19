@@ -43,7 +43,7 @@ export interface GameState {
 
 export type GameStatus = 'active' | 'check' | 'checkmate' | 'stalemate' | 'draw';
 
-export type WinReason = 'checkmate' | 'all-converted' | 'loot-boxes-collected';
+export type WinReason = 'checkmate' | 'all-converted' | 'loot-boxes-collected' | 'resign';
 
 // --- Game Mode System (ADR-005) ---
 
@@ -74,7 +74,8 @@ export type GameAction =
   | MoveAction
   | PlaceAction
   | EquipAction
-  | HitLootBoxAction;
+  | HitLootBoxAction
+  | ResignAction;
 
 export interface MoveAction {
   type: 'move';
@@ -100,6 +101,10 @@ export interface HitLootBoxAction {
   type: 'hit-loot-box';
   pieceSquare: Square;
   lootBoxSquare: Square;
+}
+
+export interface ResignAction {
+  type: 'resign';
 }
 
 // --- Pricing ---

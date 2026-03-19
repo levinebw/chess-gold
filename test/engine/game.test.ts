@@ -508,4 +508,44 @@ describe('Game Reducer', () => {
       expect(finalState.actionHistory.length).toBe(19);
     });
   });
+
+  // --- Resign ---
+
+  describe('resign', () => {
+    it('ends game with opponent winning when white resigns', () => {
+      const state = createInitialState();
+      const result = applyAction(state, { type: 'resign' });
+      expect(result).not.toHaveProperty('code');
+      const newState = result as GameState;
+      expect(newState.status).toBe('checkmate');
+      expect(newState.winner).toBe('black');
+      expect(newState.winReason).toBe('resign');
+    });
+
+    it('ends game with opponent winning when black resigns', () => {
+      // Advance to black's turn
+      let state = createInitialState();
+      state = { ...state, turn: 'black' };
+      const result = applyAction(state, { type: 'resign' });
+      expect(result).not.toHaveProperty('code');
+      const newState = result as GameState;
+      expect(newState.status).toBe('checkmate');
+      expect(newState.winner).toBe('white');
+      expect(newState.winReason).toBe('resign');
+    });
+
+    it('records resign in action history', () => {
+      const state = createInitialState();
+      const result = applyAction(state, { type: 'resign' }) as GameState;
+      expect(result.actionHistory).toHaveLength(1);
+      expect(result.actionHistory[0]).toEqual({ type: 'resign' });
+    });
+
+    it('rejects resign when game is already over', () => {
+      const state = createInitialState();
+      const resigned = applyAction(state, { type: 'resign' }) as GameState;
+      const result = applyAction(resigned, { type: 'resign' });
+      expect(result).toHaveProperty('code', 'GAME_OVER');
+    });
+  });
 });

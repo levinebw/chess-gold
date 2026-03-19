@@ -7,7 +7,7 @@ import { getValidPlacementSquares } from '../../engine/placement.ts';
 import { validateHit } from '../../engine/lootbox.ts';
 import { CHESS_GOLD_CONFIG } from '../../engine/config.ts';
 import { parseFen } from 'chessops/fen';
-import type { ClientEvents, ServerEvents, AuthResponse } from '../../server/protocol.ts';
+import type { ClientEvents, ServerEvents, AuthResponse, PlayerInfo, GameResult } from '../../server/protocol.ts';
 
 type TypedSocket = Socket<ServerEvents, ClientEvents>;
 
@@ -50,6 +50,9 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
   const [onlineStatus, setOnlineStatus] = useState<OnlineStatus>('playing');
   const [rematchRequested, setRematchRequested] = useState(false);
   const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
+  const [whiteInfo, setWhiteInfo] = useState<PlayerInfo | null>(null);
+  const [blackInfo, setBlackInfo] = useState<PlayerInfo | null>(null);
+  const [gameResult, setGameResult] = useState<GameResult | null>(null);
 
   // Attach event handlers to the existing socket
   useEffect(() => {
@@ -60,6 +63,8 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
     socket.off('game-state');
     socket.off('player-disconnected');
     socket.off('player-reconnected');
+    socket.off('player-info');
+    socket.off('game-result');
     socket.off('action-error');
     socket.off('rematch-requested');
     socket.off('rematch-accepted');
@@ -100,6 +105,16 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
       setRematchRequested(false);
       setOpponentWantsRematch(false);
       setError(null);
+      setGameResult(null);
+    };
+
+    const onPlayerInfo = (color: Color, info: PlayerInfo) => {
+      if (color === 'white') setWhiteInfo(info);
+      else setBlackInfo(info);
+    };
+
+    const onGameResult = (result: GameResult) => {
+      setGameResult(result);
     };
 
     const onRoomClosed = () => {
@@ -131,6 +146,8 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
     socket.on('player-joined', onPlayerJoined);
     socket.on('player-disconnected', onPlayerDisconnected);
     socket.on('player-reconnected', onPlayerReconnected);
+    socket.on('player-info', onPlayerInfo);
+    socket.on('game-result', onGameResult);
     socket.on('rematch-requested', onRematchRequested);
     socket.on('rematch-accepted', onRematchAccepted);
     socket.on('room-closed', onRoomClosed);
@@ -143,6 +160,8 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
       socket.off('player-joined', onPlayerJoined);
       socket.off('player-disconnected', onPlayerDisconnected);
       socket.off('player-reconnected', onPlayerReconnected);
+      socket.off('player-info', onPlayerInfo);
+      socket.off('game-result', onGameResult);
       socket.off('rematch-requested', onRematchRequested);
       socket.off('rematch-accepted', onRematchAccepted);
       socket.off('room-closed', onRoomClosed);
@@ -334,5 +353,8 @@ export function useOnlineGame(roomId: string, myColor: Color, existingSocket: Ty
     opponentWantsRematch,
     requestRematch,
     roomId,
+    whiteInfo,
+    blackInfo,
+    gameResult,
   };
 }

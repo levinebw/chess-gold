@@ -740,6 +740,26 @@ body {
   color: #aaa;
 }
 
+.lobby-register {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.lobby-identity {
+  color: #aaa;
+  font-size: 0.9rem;
+  padding: 0.25rem 0;
+}
+
+.lobby-identity strong {
+  color: #d4a843;
+}
+
+.room-host {
+  color: #aaa;
+  font-size: 0.8rem;
+}
+
 .lobby-join {
   display: flex;
   gap: 0.5rem;
@@ -879,6 +899,235 @@ body {
   color: #e0b854;
   font-style: italic;
 }
+
+.resign-confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #e05454;
+  font-weight: bold;
+}
+
+.resign-yes {
+  color: #e05454;
+  border-color: #e05454;
+}
+
+.rating-positive {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.rating-negative {
+  color: #e05454;
+  font-weight: bold;
+}
+
+.game-over-rating {
+  margin: 0.5rem 0;
+  font-size: 0.95rem;
+}
+
+.rating-casual {
+  color: #888;
+  font-style: italic;
+}
+
+.game-over-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.rated-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #aaa;
+  cursor: pointer;
+}
+
+.room-rated-badge {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.room-rated-badge.rated {
+  color: #d4a843;
+  border: 1px solid #d4a843;
+}
+
+.room-rated-badge.casual {
+  color: #888;
+  border: 1px solid #555;
+}
+
+.lobby-skip-link {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  margin-top: 0.25rem;
+}
+
+.lobby-skip-link:hover {
+  color: #aaa;
+}
+
+.lobby-name-link {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-decoration-color: #555;
+}
+
+.lobby-name-link:hover {
+  text-decoration-color: #d4a843;
+}
+
+/* Profile */
+
+.profile-page, .leaderboard-page {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+.profile-name {
+  color: #d4a843;
+  margin: 1rem 0 0.5rem;
+}
+
+.profile-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.profile-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+}
+
+.stat-value {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #e0e0e0;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: #888;
+  text-transform: uppercase;
+}
+
+.profile-matches h3 {
+  margin: 1.5rem 0 0.5rem;
+  color: #aaa;
+}
+
+.matches-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.match-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.5rem;
+  background: #252525;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.match-result {
+  font-weight: bold;
+  width: 1.5rem;
+  text-align: center;
+}
+
+.match-result.win { color: #4caf50; }
+.match-result.loss { color: #e05454; }
+.match-result.draw { color: #888; }
+
+.match-opponent { flex: 1; color: #ccc; }
+.match-mode { color: #888; font-size: 0.75rem; }
+
+.match-rating-change { font-weight: bold; }
+.match-rating-change.positive { color: #4caf50; }
+.match-rating-change.negative { color: #e05454; }
+
+.profile-loading, .profile-error, .leaderboard-loading, .leaderboard-empty {
+  color: #888;
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.profile-error { color: #e05454; }
+
+/* Leaderboard */
+
+.leaderboard-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 1rem;
+}
+
+.leaderboard-header {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.7rem;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: #252525;
+  border: 1px solid #333;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #ccc;
+  font-size: 0.9rem;
+  text-align: left;
+  width: 100%;
+}
+
+.leaderboard-row:hover {
+  border-color: #d4a843;
+}
+
+.leaderboard-row.current-player {
+  border-color: #d4a843;
+  background: #2a2518;
+}
+
+.lb-rank { width: 2rem; text-align: center; color: #888; }
+.lb-name { flex: 1; }
+.lb-rating { width: 4rem; text-align: right; font-weight: bold; color: #d4a843; }
+.lb-games { width: 3.5rem; text-align: right; color: #888; }
+.lb-wins { width: 3rem; text-align: right; color: #4caf50; }
 
 /* Back to lobby */
 

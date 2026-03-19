@@ -5,8 +5,11 @@ import { randomBytes, createHmac, timingSafeEqual } from 'node:crypto';
 import { Server } from 'socket.io';
 import { createInitialState, applyAction } from '../engine/index.ts';
 import type { GameState, GameError, Color } from '../engine/index.ts';
-import type { ClientEvents, ServerEvents, RoomInfo } from './protocol.ts';
-import { validateAction, validateRoomId, validateCreateRoomOpts } from './validation.ts';
+import type { ClientEvents, ServerEvents, RoomInfo, PlayerInfo, GameResult } from './protocol.ts';
+import { validateAction, validateRoomId, validateCreateRoomOpts, validateDisplayName, validatePlayerToken, validatePlayerId } from './validation.ts';
+import { createPlayer, getPlayerByToken, getPlayer, updatePlayerStats, recordMatch, getPlayerMatches, getLeaderboard, Timestamp } from './db.ts';
+import type { MatchSummary } from './protocol.ts';
+import { calculateElo } from './elo.ts';
 
 const app = express();
 app.disable('x-powered-by');
@@ -30,6 +33,9 @@ interface PlayerSession {
   color: Color | null;
   createdAt: number;
   lastSeen: number;
+  playerId: string | null;
+  displayName: string | null;
+  rating: number | null;
 }
 
 const sessions = new Map<string, PlayerSession>();
@@ -64,6 +70,9 @@ function createSession(socketId: string): PlayerSession {
     color: null,
     createdAt: now,
     lastSeen: now,
+    playerId: null,
+    displayName: null,
+    rating: null,
   };
   sessions.set(sessionId, session);
   return session;
@@ -84,9 +93,11 @@ interface Room {
   black: string | null;   // sessionId (not socket.id)
   state: GameState;
   startingGold: number;
+  rated: boolean;
   rematchRequested: Color | null;
   disconnectTimers: Map<Color, ReturnType<typeof setTimeout>>;
   createdAt: number;
+  matchRecorded: boolean;
 }
 
 const rooms = new Map<string, Room>();
@@ -117,13 +128,29 @@ function roomStatus(room: Room): RoomInfo['status'] {
 }
 
 function toRoomInfo(room: Room): RoomInfo {
-  return {
+  const info: RoomInfo = {
     id: room.id,
     players: playerCount(room),
     status: roomStatus(room),
     startingGold: room.startingGold,
     modeName: room.state.modeConfig.name,
+    rated: room.rated,
   };
+  if (room.white) {
+    const s = sessions.get(room.white);
+    if (s?.displayName) {
+      info.whiteName = s.displayName;
+      if (s.rating !== null) info.whiteRating = s.rating;
+    }
+  }
+  if (room.black) {
+    const s = sessions.get(room.black);
+    if (s?.displayName) {
+      info.blackName = s.displayName;
+      if (s.rating !== null) info.blackRating = s.rating;
+    }
+  }
+  return info;
 }
 
 // --- Rate limiting ---
@@ -137,11 +164,15 @@ const rateLimits = new Map<string, Map<string, RateLimitBucket>>();
 
 const RATE_LIMITS: Record<string, { maxPerWindow: number; windowMs: number }> = {
   'authenticate': { maxPerWindow: 10, windowMs: 60_000 },
+  'register': { maxPerWindow: 5, windowMs: 60_000 },
+  'login': { maxPerWindow: 10, windowMs: 60_000 },
   'create-room': { maxPerWindow: 5, windowMs: 60_000 },
   'join-room': { maxPerWindow: 10, windowMs: 60_000 },
   'action': { maxPerWindow: 60, windowMs: 60_000 },
   'request-rematch': { maxPerWindow: 5, windowMs: 60_000 },
   'list-rooms': { maxPerWindow: 10, windowMs: 60_000 },
+  'get-profile': { maxPerWindow: 10, windowMs: 60_000 },
+  'get-leaderboard': { maxPerWindow: 5, windowMs: 60_000 },
 };
 
 function checkRateLimit(socketId: string, event: string): boolean {
@@ -271,6 +302,100 @@ io.on('connection', (socket) => {
     return session;
   }
 
+  // --- Player identity ---
+
+  function getPlayerInfo(session: PlayerSession): PlayerInfo | null {
+    if (!session.playerId || !session.displayName) return null;
+    return { playerId: session.playerId, displayName: session.displayName, rating: session.rating ?? 1200 };
+  }
+
+  function emitPlayerInfoForRoom(room: Room, roomId: string): void {
+    if (room.white) {
+      const wSession = sessions.get(room.white);
+      if (wSession) {
+        const info = getPlayerInfo(wSession);
+        if (info) io.to(roomId).emit('player-info', 'white', info);
+      }
+    }
+    if (room.black) {
+      const bSession = sessions.get(room.black);
+      if (bSession) {
+        const info = getPlayerInfo(bSession);
+        if (info) io.to(roomId).emit('player-info', 'black', info);
+      }
+    }
+  }
+
+  socket.on('register', async (displayName, callback) => {
+    const session = requireSession();
+    if (!session) {
+      callback({ error: 'Not authenticated' });
+      return;
+    }
+
+    if (!checkRateLimit(socket.id, 'register')) {
+      callback({ error: 'Rate limited' });
+      return;
+    }
+
+    const validatedName = validateDisplayName(displayName);
+    if (!validatedName) {
+      callback({ error: 'Invalid display name (2-20 chars, letters/numbers/spaces only)' });
+      return;
+    }
+
+    try {
+      const result = await createPlayer(validatedName);
+      session.playerId = result.playerId;
+      session.displayName = validatedName;
+      session.rating = 1200;
+      callback({ playerId: result.playerId, playerToken: result.playerToken, displayName: validatedName });
+      console.log(`Registered player "${validatedName}" (${result.playerId}) for session ${session.sessionId}`);
+    } catch (err) {
+      console.error('Registration error:', err);
+      callback({ error: 'Registration failed' });
+    }
+  });
+
+  socket.on('login', async (playerToken, callback) => {
+    const session = requireSession();
+    if (!session) {
+      callback({ error: 'Not authenticated' });
+      return;
+    }
+
+    if (!checkRateLimit(socket.id, 'login')) {
+      callback({ error: 'Rate limited' });
+      return;
+    }
+
+    const validatedToken = validatePlayerToken(playerToken);
+    if (!validatedToken) {
+      callback({ error: 'Invalid token format' });
+      return;
+    }
+
+    try {
+      const result = await getPlayerByToken(validatedToken);
+      if (!result) {
+        callback({ error: 'Player not found' });
+        return;
+      }
+      session.playerId = result.playerId;
+      session.displayName = result.player.displayName;
+      session.rating = result.player.rating;
+      callback({
+        playerId: result.playerId,
+        displayName: result.player.displayName,
+        rating: result.player.rating,
+      });
+      console.log(`Login: "${result.player.displayName}" (${result.playerId}) for session ${session.sessionId}`);
+    } catch (err) {
+      console.error('Login error:', err);
+      callback({ error: 'Login failed' });
+    }
+  });
+
   // --- Room events ---
 
   socket.on('create-room', (opts, callback) => {
@@ -304,9 +429,11 @@ io.on('connection', (socket) => {
       black: null,
       state: createInitialState(modeConfig, startingGold),
       startingGold,
+      rated: validatedOpts?.rated ?? true,
       rematchRequested: null,
       disconnectTimers: new Map(),
       createdAt: Date.now(),
+      matchRecorded: false,
     };
     rooms.set(roomId, room);
     session.roomId = roomId;
@@ -377,8 +504,106 @@ io.on('connection', (socket) => {
     callback({ roomId: validatedRoomId, color, state: room.state });
     // Emit game-state to all players so they get the correct mode/state
     io.to(validatedRoomId).emit('game-state', room.state);
+    // Emit player identity info when both players are in the room
+    emitPlayerInfoForRoom(room, validatedRoomId);
     console.log(`Session ${session.sessionId} joined room ${validatedRoomId} as ${color}`);
   });
+
+  async function handleMatchEnd(room: Room, roomId: string): Promise<void> {
+    const { state } = room;
+    const isTerminal = state.status === 'checkmate' || state.status === 'stalemate' || state.status === 'draw';
+    if (!isTerminal || room.matchRecorded) return;
+
+    room.matchRecorded = true;
+
+    const wSession = room.white ? sessions.get(room.white) : null;
+    const bSession = room.black ? sessions.get(room.black) : null;
+    const bothRegistered = !!(wSession?.playerId && bSession?.playerId);
+
+    if (!room.rated || !bothRegistered) {
+      // Casual or anonymous — emit unrated result
+      io.to(roomId).emit('game-result', {
+        ratingChange: { white: 0, black: 0 },
+        newRating: { white: 0, black: 0 },
+        rated: false,
+      } as GameResult);
+      return;
+    }
+
+    try {
+      const wPlayer = await getPlayer(wSession!.playerId!);
+      const bPlayer = await getPlayer(bSession!.playerId!);
+      if (!wPlayer || !bPlayer) return;
+
+      // Determine score: 1 = white wins, 0 = black wins, 0.5 = draw
+      let scoreWhite = 0.5;
+      if (state.winner === 'white') scoreWhite = 1;
+      else if (state.winner === 'black') scoreWhite = 0;
+
+      const { newRatingA, newRatingB } = calculateElo(
+        wPlayer.rating, bPlayer.rating, scoreWhite,
+        wPlayer.gamesPlayed, bPlayer.gamesPlayed,
+      );
+
+      const wChange = newRatingA - wPlayer.rating;
+      const bChange = newRatingB - bPlayer.rating;
+
+      // Determine result for match record
+      const result = state.winner === 'white' ? 'white' : state.winner === 'black' ? 'black' : 'draw';
+      const winField = result === 'draw' ? 'draws' : result === 'white' ? 'wins' : 'losses';
+      const loseField = result === 'draw' ? 'draws' : result === 'white' ? 'losses' : 'wins';
+
+      const now = Timestamp.now();
+
+      // Update both players and record match in parallel
+      await Promise.all([
+        updatePlayerStats(wSession!.playerId!, {
+          gamesPlayed: wPlayer.gamesPlayed + 1,
+          [winField]: (wPlayer[winField] ?? 0) + 1,
+          rating: newRatingA,
+          lastGameAt: now,
+        }),
+        updatePlayerStats(bSession!.playerId!, {
+          gamesPlayed: bPlayer.gamesPlayed + 1,
+          [loseField]: (bPlayer[loseField] ?? 0) + 1,
+          rating: newRatingB,
+          lastGameAt: now,
+        }),
+        recordMatch({
+          roomId: room.id,
+          mode: state.modeConfig.name,
+          white: {
+            playerId: wSession!.playerId!,
+            displayName: wSession!.displayName!,
+            ratingBefore: wPlayer.rating,
+            ratingAfter: newRatingA,
+          },
+          black: {
+            playerId: bSession!.playerId!,
+            displayName: bSession!.displayName!,
+            ratingBefore: bPlayer.rating,
+            ratingAfter: newRatingB,
+          },
+          result: result as 'white' | 'black' | 'draw',
+          winReason: state.winReason ?? null,
+          rated: true,
+          turnCount: state.halfMoveCount,
+          startedAt: Timestamp.fromMillis(room.createdAt),
+          endedAt: now,
+        }),
+      ]);
+
+      io.to(roomId).emit('game-result', {
+        ratingChange: { white: wChange, black: bChange },
+        newRating: { white: newRatingA, black: newRatingB },
+        rated: true,
+      } as GameResult);
+
+      console.log(`Match recorded: ${room.id} — W:${wChange > 0 ? '+' : ''}${wChange} B:${bChange > 0 ? '+' : ''}${bChange}`);
+    } catch (err) {
+      console.error('Match recording error:', err);
+    }
+  }
 
   socket.on('action', (roomId, action) => {
     const session = requireSession();
@@ -403,6 +628,22 @@ io.on('connection', (socket) => {
 
     const color = getPlayerColor(room, session.sessionId);
     if (!color) return;
+
+    // Resign is allowed regardless of whose turn it is
+    if (validatedAction.type === 'resign') {
+      // Temporarily set turn to the resigning player so applyAction gives the win to opponent
+      const resignState = { ...room.state, turn: color };
+      const result = applyAction(resignState, validatedAction);
+      if ('type' in result && result.type === 'error') {
+        socket.emit('action-error', result as GameError);
+        return;
+      }
+      room.state = result as GameState;
+      io.to(validatedRoomId).emit('game-state', room.state);
+      handleMatchEnd(room, validatedRoomId);
+      return;
+    }
+
     if (color !== room.state.turn) {
       socket.emit('action-error', { type: 'error', code: 'NOT_YOUR_TURN', message: 'Not your turn' });
       return;
@@ -417,6 +658,7 @@ io.on('connection', (socket) => {
 
       room.state = result as GameState;
       io.to(validatedRoomId).emit('game-state', room.state);
+      handleMatchEnd(room, validatedRoomId);
     } catch (err) {
       console.error(`Action error in room ${validatedRoomId}:`, err);
       socket.emit('action-error', { type: 'error', code: 'INVALID_ACTION', message: 'Server error processing action' } as GameError);
@@ -442,6 +684,7 @@ io.on('connection', (socket) => {
       // Both players have requested — start new game
       room.state = createInitialState(room.state.modeConfig, room.startingGold);
       room.rematchRequested = null;
+      room.matchRecorded = false;
       io.to(validatedRoomId).emit('rematch-accepted', room.state);
     } else {
       room.rematchRequested = color;
@@ -463,6 +706,77 @@ io.on('connection', (socket) => {
       }
     }
     callback(waiting);
+  });
+
+  socket.on('get-profile', async (playerId, callback) => {
+    if (!checkRateLimit(socket.id, 'get-profile')) {
+      callback({ error: 'Rate limited' });
+      return;
+    }
+
+    const validatedId = validatePlayerId(playerId);
+    if (!validatedId) {
+      callback({ error: 'Invalid player ID' });
+      return;
+    }
+
+    try {
+      const player = await getPlayer(validatedId);
+      if (!player) {
+        callback({ error: 'Player not found' });
+        return;
+      }
+
+      const matches = await getPlayerMatches(validatedId, 10);
+      const recentMatches: MatchSummary[] = matches.map((m, i) => {
+        const isWhite = m.white.playerId === validatedId;
+        const opponentId = isWhite ? m.black.playerId : m.white.playerId;
+        const opponent = isWhite ? m.black.displayName : m.white.displayName;
+        const opponentRating = isWhite ? m.black.ratingBefore : m.white.ratingBefore;
+        const myBefore = isWhite ? m.white.ratingBefore : m.black.ratingBefore;
+        const myAfter = isWhite ? m.white.ratingAfter : m.black.ratingAfter;
+        const result = m.result === 'draw' ? 'draw' : ((m.result === 'white') === isWhite ? 'win' : 'loss');
+        return {
+          matchId: `m${i}`,
+          opponentId,
+          opponent,
+          opponentRating,
+          result: result as 'win' | 'loss' | 'draw',
+          ratingChange: myAfter - myBefore,
+          mode: m.mode,
+          date: m.endedAt.toMillis ? new Date(m.endedAt.toMillis()).toISOString() : '',
+        };
+      });
+
+      callback({
+        playerId: validatedId,
+        displayName: player.displayName,
+        rating: player.rating,
+        gamesPlayed: player.gamesPlayed,
+        wins: player.wins,
+        losses: player.losses,
+        draws: player.draws,
+        recentMatches,
+      });
+    } catch (err) {
+      console.error('Profile error:', err);
+      callback({ error: 'Failed to load profile' });
+    }
+  });
+
+  socket.on('get-leaderboard', async (callback) => {
+    if (!checkRateLimit(socket.id, 'get-leaderboard')) {
+      callback([]);
+      return;
+    }
+
+    try {
+      const entries = await getLeaderboard(20);
+      callback(entries.map((e, i) => ({ ...e, rank: i + 1 })));
+    } catch (err) {
+      console.error('Leaderboard error:', err);
+      callback([]);
+    }
   });
 
   socket.on('disconnect', () => {

@@ -30,8 +30,15 @@ const CreateRoomOptsSchema = z
   .object({
     startingGold: z.number().int().min(1).max(1000).optional(),
     modeConfig: ModeConfigSchema.optional(),
+    rated: z.boolean().optional(),
   })
   .optional();
+
+const DisplayNameSchema = z.string().trim().min(2).max(20).regex(/^[a-zA-Z0-9 ]+$/);
+
+const PlayerTokenSchema = z.string().length(64).regex(/^[a-f0-9]+$/);
+
+const PlayerIdSchema = z.string().min(1).max(128);
 
 const RoomIdSchema = z.string().min(1).max(20);
 
@@ -63,11 +70,16 @@ const HitLootBoxActionSchema = z.object({
   lootBoxSquare: z.number().int().min(0).max(63),
 });
 
+const ResignActionSchema = z.object({
+  type: z.literal('resign'),
+});
+
 const GameActionSchema = z.discriminatedUnion('type', [
   MoveActionSchema,
   PlaceActionSchema,
   EquipActionSchema,
   HitLootBoxActionSchema,
+  ResignActionSchema,
 ]);
 
 // --- Validation helpers ---
@@ -79,6 +91,21 @@ export function validateAction(data: unknown): GameAction | null {
 
 export function validateRoomId(data: unknown): string | null {
   const result = RoomIdSchema.safeParse(data);
+  return result.success ? result.data : null;
+}
+
+export function validateDisplayName(data: unknown): string | null {
+  const result = DisplayNameSchema.safeParse(data);
+  return result.success ? result.data : null;
+}
+
+export function validatePlayerToken(data: unknown): string | null {
+  const result = PlayerTokenSchema.safeParse(data);
+  return result.success ? result.data : null;
+}
+
+export function validatePlayerId(data: unknown): string | null {
+  const result = PlayerIdSchema.safeParse(data);
   return result.success ? result.data : null;
 }
 
@@ -96,4 +123,6 @@ export {
   RoomIdSchema,
   CreateRoomOptsSchema,
   ModeConfigSchema,
+  DisplayNameSchema,
+  PlayerTokenSchema,
 };

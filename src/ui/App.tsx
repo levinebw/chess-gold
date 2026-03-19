@@ -101,7 +101,7 @@ function GameView({ isOnline, onLeave }: { isOnline: boolean; onLeave?: () => vo
         <ActionHistory />
       </div>
       <LootBoxReward />
-      <GameOverDialog />
+      <GameOverDialog onLeave={isOnline ? onLeave : undefined} />
       {showRules && <RulesDialog onClose={() => setShowRules(false)} />}
     </div>
   );

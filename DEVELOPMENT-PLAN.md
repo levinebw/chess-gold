@@ -186,65 +186,141 @@ Game mode 2 — the signature Chess Gold mode with loot boxes and items.
 
 ## Phase 8 — Full Platform (`v1.0`) 🔄 IN PROGRESS
 
-Mobile polish, ratings, profiles, game history.
+Mobile polish, persistent identity, Elo ratings, player profiles.
 
-| Task | Role | Title | Status |
-|------|------|-------|--------|
-| 038 | Lead Dev | Phase 8A: Mobile Fit & Finish | ✅ Complete |
+| Task | Role | Title | Phase | Status |
+|------|------|-------|-------|--------|
+| 038 | Lead Dev | Mobile Fit & Finish | 8A | ✅ Complete |
+| 039 | Backend Dev | Firestore Setup & Player Data Layer | 8B | ✅ Complete |
+| 040 | Lead Dev | Guest Identity & Display Names | 8B | ✅ Complete |
+| 041 | Lead Dev | Resign Action | 8C | ✅ Complete |
+| 042 | Backend Dev | Elo Rating System | 8C | ✅ Complete |
+| 043 | Lead Dev | Post-Game Rating Display & Rated/Casual UI | 8C | ✅ Complete |
+| 044 | Lead Dev | Player Profiles & Leaderboard | 8D | ✅ Complete |
+| 059 | Backend Dev | Backend Deployment: Firestore + Updated Cloud Run | 8E | 🔲 Pending |
+| 045 | QA | Phase 8 Regression & Integration Test | 8E | 🔲 Pending |
 
-**Planned scope (remaining tasks TBD):**
-- 8A: Mobile fit & finish — phone-specific CSS breakpoints (480px, 360px), 44px touch targets, compact layouts
-- 8B: Persistent player identity — Firestore guest accounts, display names, localStorage tokens
-- 8C: Elo rating system — rated vs. casual, K-factor, per-mode ratings, post-game rating display, leaderboard
-- 8D: Player profiles — stats, rating history, recent matches, opponent info
+**Dependencies:**
+- Task 039 → 040 (identity needs data layer)
+- Task 040 → 041 (resign needs player identity for match recording)
+- Tasks 039 + 040 + 041 → 042 (Elo needs data layer, identity, and resign)
+- Task 042 → 043 (rating UI needs Elo backend)
+- Tasks 042 + 043 → 044 (profiles need ratings and match data)
+- Tasks 039-044 → 059 (deployment needs all backend features built)
+- Task 059 → 045 (QA needs live backend to test against)
+
+**Key design decisions:**
+- Guest-only, no auth wall: display name + random token in localStorage
+- Single overall Elo rating for v1 (not per-mode); Firestore is schemaless, per-mode can be added later
+- K-factor: 32 for < 30 games, 16 otherwise. Floor at 100.
+- Server-authoritative: Elo calculations and match recording happen server-side
 
 **Team:** Lead Developer + Backend Developer + QA Engineer
 
 ---
 
-## Phase 9 — King's Chess + Gold Mine (`v1.1`) 🔲 TASKS NOT YET DEFINED
+## Phase 9 — King's Chess + Gold Mine (`v1.1`) 🔲 PENDING
 
-Game modes 5 and 3.
+Game modes 5 and 3. King's Chess reuses piece conversion (Phase 6) and gold economy (Phase 1), adding placement throttle. Gold Mine adds unrestricted placement and all-eliminated win condition.
 
-**Planned scope:**
-- **King's Chess (mode 5):** Chess Gold + piece conversion + placement throttle (every other turn). Win: `all-converted`
-- **Gold Mine (mode 3):** Needs design clarification (starting gold? placement rules?). Win: `all-eliminated` or `checkmate`
+| Task | Role | Title | Phase | Status |
+|------|------|-------|-------|--------|
+| 046 | Lead Dev | King's Chess: Placement Throttle Engine | 9A | 🔲 Pending |
+| 047 | Lead Dev | Gold Mine: Unrestricted Placement + All-Eliminated Win Condition | 9A | 🔲 Pending |
+| 048 | Lead Dev | Phase 9 UI: Mode Selector + Rules Dialog | 9B | 🔲 Pending |
+| 049 | QA | Phase 9 Engine Tests + Playtest | 9C | 🔲 Pending |
+
+**Dependencies:**
+- Tasks 046 + 047 → 048 (UI integration needs engine logic first)
+- Tasks 046 + 047 + 048 → 049 (QA blocked until all features complete)
+
+**What already exists:**
+- Piece conversion logic (Conqueror, Phase 6) — reused by King's Chess
+- `all-converted` win condition — reused by King's Chess
+- Gold economy — reused by King's Chess and Gold Mine
+- Mode presets defined in `config.ts` for both modes
+
+**What's new:**
+- Placement throttle: can only place every other turn (King's Chess)
+- `all-eliminated` win condition (Gold Mine)
+- Unrestricted placement zones (Gold Mine)
+- Infinite starting gold (Gold Mine)
+
+**Open question:** OQ-4 (Gold Mine design) is tentatively resolved — infinite gold, place anywhere, win by elimination or checkmate. Pending final confirmation.
 
 **Team:** Lead Developer + QA Engineer
 
 ---
 
-## Phase 10 — Siege (`v1.2`) 🔲 TASKS NOT YET DEFINED
+## Phase 10 — Siege (`v1.2`) 🔲 PENDING
 
-Game mode 6.
+Game mode 6. The most technically complex remaining mode — introduces a center pulse timing system, temporary piece upgrades, and custom move generation that chessops cannot handle natively.
 
-**Planned scope:**
-- Center square pulse every 5 moves (d4/d5/e4/e5)
-- Temporary one-move upgrades per piece type
-- Custom move generation layer (chessops can't handle natively)
-- Win condition: all 4 center squares occupied OR checkmate
-- Standard start, no gold economy
+| Task | Role | Title | Phase | Status |
+|------|------|-------|-------|--------|
+| 050 | Lead Dev | Siege Engine: Center Pulse System + State Extensions | 10A | 🔲 Pending |
+| 051 | Lead Dev | Siege Engine: Temporary Piece Upgrades + Custom Move Generation | 10A | 🔲 Pending |
+| 052 | Lead Dev | Siege: Center-Occupied Win Condition + UI Integration | 10B | 🔲 Pending |
+| 053 | QA | Siege Mode Tests + Playtest | 10C | 🔲 Pending |
 
-**Pending clarification:** Does upgrade persist for one move or until next pulse?
+**Dependencies:**
+- Task 050 → 051 (upgrades need pulse system and state tracking)
+- Tasks 050 + 051 → 052 (win condition + UI needs engine complete)
+- Tasks 050 + 051 + 052 → 053 (QA blocked until all features complete)
+
+**What already exists:**
+- `centerPulse` flag in `GameModeConfig`
+- Siege mode preset in `config.ts`
+- Standard starting position support
+
+**What's new:**
+- Center pulse timing (every 5 half-moves, d4/d5/e4/e5)
+- `GameState.siege` — pulse counter and upgraded piece tracking
+- Temporary piece upgrades: pawn (king-like), knight (double jump), rook/bishop/queen (pass through one friendly)
+- Custom move generation layer (`src/engine/siege.ts`)
+- `center-occupied` win condition
+- Pulse visual effects and upgrade indicators
+
+**Open question:** OQ-2 — does upgrade persist for one move or until next pulse? Designer's read is one move only. Built for one-move upgrades.
 
 **Team:** Lead Developer + QA Engineer
 
 ---
 
-## Phase 11 — Flashlight Modes (`v1.3`) 🔲 TASKS NOT YET DEFINED
+## Phase 11 — Flashlight Modes (`v1.3`) 🔲 PENDING
 
-Game modes 7 and 8.
+Game modes 7 and 8. Introduces fog of war and no-check mode — the most architecturally significant addition since multiplayer (Phase 4). Requires changes to the engine (legal move generation), UI (board masking), and server (visibility filtering).
 
-**Planned scope:**
-- **Flashlight (mode 7):** Fog of war — see only reachable squares. No check exists. King capture = win. Standard start.
-- **Flashlight Gold (mode 8):** Flashlight + Chess Gold combined.
-- Engine: disable check filtering when `noCheck: true`
-- UI: show/hide squares per visibility
-- **Multiplayer required** for proper fog of war (server-authoritative visibility)
+| Task | Role | Title | Phase | Status |
+|------|------|-------|-------|--------|
+| 054 | Lead Dev | Flashlight Engine: No-Check Mode + King-Captured Win Condition | 11A | 🔲 Pending |
+| 055 | Lead Dev | Flashlight Engine: Fog of War Visibility Calculation | 11A | 🔲 Pending |
+| 056 | Lead Dev | Flashlight UI: Board Visibility Masking + Mode Integration | 11B | 🔲 Pending |
+| 057 | Lead Dev | Flashlight Multiplayer: Server-Authoritative Visibility | 11C | 🔲 Pending |
+| 058 | QA | Flashlight Modes Tests + Playtest | 11D | 🔲 Pending |
 
-**Pending from designer:**
-- Exact visibility scope
-- Placement rules in fog (Flashlight Gold)
+**Dependencies:**
+- Task 054 → 055 (visibility needs no-check move generation for accurate legal dests)
+- Tasks 054 + 055 → 056 (UI masking needs engine visibility)
+- Tasks 054 + 055 → 057 (server filtering needs visibility calculation)
+- Tasks 054-057 → 058 (QA blocked until all features complete)
+
+**What already exists:**
+- `fogOfWar` and `noCheck` flags in `GameModeConfig`
+- Flashlight and Flashlight Gold presets in `config.ts`
+- `game.ts` already skips checkmate detection when `noCheck: true`
+- Socket.IO server with state broadcasting infrastructure
+
+**What's new:**
+- Override chessops king-safety filtering when `noCheck: true` (allow king-exposure moves)
+- King capture as legal move
+- `king-captured` win condition
+- `src/engine/visibility.ts` — fog of war visibility calculation
+- Placement filtered by visibility (Flashlight Gold)
+- Board fog overlay + turn handoff screen (local play)
+- Server-side state filtering (multiplayer anti-cheat: hidden pieces never sent to client)
+
+**Open questions:** OQ-3 — exact visibility scope (default: own squares + reachable squares + blocking pieces). Placement in fog (default: restricted to visible squares within zone).
 
 **Team:** Lead Developer + QA Engineer
 
@@ -261,7 +337,7 @@ Game modes 7 and 8.
 | 5 | v0.5 | Bot Opponent | 024-030 | ✅ Complete |
 | 6 | v0.6 | Conqueror + Standard Chess | (unnumbered) | ✅ Complete |
 | 7 | v0.7 | Loot Boxes | 031-037 | ✅ Complete |
-| 8 | v1.0 | Full Platform | 038+ | 🔄 In progress |
-| 9 | v1.1 | King's Chess + Gold Mine | — | 🔲 Not defined |
-| 10 | v1.2 | Siege | — | 🔲 Not defined |
-| 11 | v1.3 | Flashlight Modes | — | 🔲 Not defined |
+| 8 | v1.0 | Full Platform | 038-045 | 🔄 In progress |
+| 9 | v1.1 | King's Chess + Gold Mine | 046-049 | 🔲 Pending |
+| 10 | v1.2 | Siege | 050-053 | 🔲 Pending |
+| 11 | v1.3 | Flashlight Modes | 054-058 | 🔲 Pending |
