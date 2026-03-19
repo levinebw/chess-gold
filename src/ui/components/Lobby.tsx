@@ -322,6 +322,12 @@ export function Lobby({ onLocalGame, onBotGame, onJoinedRoom }: Props) {
 
       <div className="lobby-divider">or play online</div>
 
+      {socketConnected && (
+        <div className="lobby-section lobby-leaderboard-link">
+          <button className="lobby-button secondary" onClick={() => setSubView('leaderboard')}>Leaderboard</button>
+        </div>
+      )}
+
       {/* Player identity gate for online play */}
       {identityStatus === 'checking' && (
         <div className="lobby-section">
@@ -368,7 +374,6 @@ export function Lobby({ onLocalGame, onBotGame, onJoinedRoom }: Props) {
               ) : (
                 <><strong>{playerName}</strong>{playerRating !== null && ` (${playerRating})`}</>
               )}
-              <button className="lobby-button secondary small" onClick={() => setSubView('leaderboard')}>Leaderboard</button>
             </div>
           )}
 
