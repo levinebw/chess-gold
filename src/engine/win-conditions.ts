@@ -56,7 +56,30 @@ export function checkLootBoxesCollected(state: GameState): Color | null {
   return null;
 }
 
+/**
+ * Check if either player has zero pieces remaining (including king).
+ * Returns the opponent (the winner) or null.
+ */
+export function checkAllEliminated(state: GameState): Color | null {
+  const setup = parseFen(state.fen);
+  if (setup.isErr) return null;
+
+  const board = setup.value.board;
+
+  let whiteCount = 0;
+  let blackCount = 0;
+
+  for (const _sq of board.white) whiteCount++;
+  for (const _sq of board.black) blackCount++;
+
+  if (whiteCount === 0) return 'black';
+  if (blackCount === 0) return 'white';
+
+  return null;
+}
+
 export const WIN_CONDITION_CHECKERS: Partial<Record<string, WinConditionChecker>> = {
   'all-converted': checkAllConverted,
   'loot-boxes-collected': checkLootBoxesCollected,
+  'all-eliminated': checkAllEliminated,
 };

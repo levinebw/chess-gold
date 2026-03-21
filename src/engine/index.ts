@@ -42,7 +42,7 @@ export { awardTurnIncome, deductPurchaseCost, canAffordPiece, awardCaptureReward
 export { getLegalMoves, isInCheck, isCheckmate, isStalemate, applyMove } from './position.ts';
 
 // Placement
-export { isValidPlacement, getValidPlacementSquares, placementResolvesCheck, hasInInventory, removeFromInventory } from './placement.ts';
+export { isValidPlacement, getValidPlacementSquares, placementResolvesCheck, hasInInventory, removeFromInventory, canPlaceThisTurn } from './placement.ts';
 
 // Promotion
 export { canPromote, applyPromotion } from './promotion.ts';
@@ -68,4 +68,4 @@ export {
 } from './equipment.ts';
 
 // Win Conditions
-export { checkAllConverted, checkLootBoxesCollected } from './win-conditions.ts';
+export { checkAllConverted, checkLootBoxesCollected, checkAllEliminated } from './win-conditions.ts';

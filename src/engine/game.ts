@@ -4,7 +4,7 @@ import { CHESS_GOLD_CONFIG, MODE_PRESETS } from './config.ts';
 import { awardTurnIncome, canAffordPiece, deductPurchaseCost } from './gold.ts';
 import { isValidPlacement, placementResolvesCheck, getValidPlacementSquares, hasInInventory, removeFromInventory } from './placement.ts';
 import { getLegalMoves, isInCheck, isCheckmate, isStalemate, applyMove } from './position.ts';
-import { checkAllConverted, checkLootBoxesCollected } from './win-conditions.ts';
+import { checkAllConverted, checkLootBoxesCollected, checkAllEliminated } from './win-conditions.ts';
 import { shouldSpawnLootBox, spawnLootBox, validateHit, applyHit, autoHitAfterMove } from './lootbox.ts';
 import { validateEquip, applyEquip } from './equipment.ts';
 
@@ -31,9 +31,11 @@ function canPlacementEscapeCheck(state: GameState): boolean {
 const KINGS_ONLY_FEN = '4k3/8/8/8/8/8/8/4K3 w - - 0 1';
 const STANDARD_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
+const GOLD_MINE_STARTING_GOLD = 9999;
+
 export function createInitialState(modeConfig?: GameModeConfig, startingGold?: number): GameState {
   const config = modeConfig ?? MODE_PRESETS['chess-gold'];
-  const gold = startingGold ?? CHESS_GOLD_CONFIG.startingGold;
+  const gold = startingGold ?? (config.unrestrictedPlacement ? GOLD_MINE_STARTING_GOLD : CHESS_GOLD_CONFIG.startingGold);
   const fen = config.standardStart ? STANDARD_FEN : KINGS_ONLY_FEN;
   return {
     fen,
@@ -56,6 +58,7 @@ export function createInitialState(modeConfig?: GameModeConfig, startingGold?: n
     winReason: null,
     actionHistory: [],
     positionHistory: [],
+    lastPlacementTurn: { white: null, black: null },
     modeConfig: config,
   };
 }
@@ -127,6 +130,14 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
     }
 
   } else if (action.type === 'place') {
+    // Placement throttle: can only place every other turn
+    if (current.modeConfig.placementThrottle && !action.fromInventory) {
+      const lastTurn = current.lastPlacementTurn[actingPlayer];
+      if (lastTurn !== null && current.turnNumber - lastTurn < 2) {
+        return makeError('INVALID_PLACEMENT', 'Placement throttle: you can only place a piece every other turn');
+      }
+    }
+
     if (action.fromInventory) {
       // Place from inventory — free, no gold cost
       if (!hasInInventory(current, action.piece)) {
@@ -164,6 +175,10 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
       ...current,
       fen: newFen,
       turn: actingPlayer === 'white' ? 'black' : 'white',
+      lastPlacementTurn: {
+        ...current.lastPlacementTurn,
+        [actingPlayer]: current.turnNumber,
+      },
     };
   } else if (action.type === 'equip') {
     const equipError = validateEquip(current, action.item, action.square);
@@ -253,6 +268,18 @@ export function applyAction(state: GameState, action: GameAction): GameState | G
           status: 'checkmate',
           winner,
           winReason: 'loot-boxes-collected',
+        };
+      }
+    }
+
+    if (winConditions.includes('all-eliminated')) {
+      const winner = checkAllEliminated(current);
+      if (winner) {
+        current = {
+          ...current,
+          status: 'checkmate',
+          winner,
+          winReason: 'all-eliminated',
         };
       }
     }

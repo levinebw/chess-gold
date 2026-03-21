@@ -1,6 +1,6 @@
 import { Chess } from 'chessops/chess';
 import { parseFen } from 'chessops/fen';
-import type { GameState, PurchasableRole, Role, Square } from './types.ts';
+import type { Color, GameState, PurchasableRole, Role, Square } from './types.ts';
 import { CHESS_GOLD_CONFIG } from './config.ts';
 import { isInCheck } from './position.ts';
 
@@ -42,14 +42,23 @@ function parseBoard(fen: string) {
 
 export function isValidPlacement(state: GameState, piece: PurchasableRole, square: Square): boolean {
   const row = squareRow(square);
-  const zone = getPlacementZone(state.turn);
 
-  if (row < zone.minRow || row > zone.maxRow) return false;
+  if (state.modeConfig.unrestrictedPlacement) {
+    // Unrestricted: any unoccupied square, but pawns still can't go on back rank
+    if (piece === 'pawn') {
+      const backRank = state.turn === 'white' ? 8 : 1;
+      if (row === backRank) return false;
+    }
+  } else {
+    // Standard zone-restricted placement
+    const zone = getPlacementZone(state.turn);
+    if (row < zone.minRow || row > zone.maxRow) return false;
 
-  if (piece === 'pawn') {
-    const pawnMin = getPawnMinRow(state.turn);
-    const pawnMax = getPawnMaxRow(state.turn);
-    if (row < pawnMin || row > pawnMax) return false;
+    if (piece === 'pawn') {
+      const pawnMin = getPawnMinRow(state.turn);
+      const pawnMax = getPawnMaxRow(state.turn);
+      if (row < pawnMin || row > pawnMax) return false;
+    }
   }
 
   const board = parseBoard(state.fen);
@@ -90,6 +99,15 @@ export function placementResolvesCheck(state: GameState, piece: PurchasableRole,
   if (pos.isErr) return false;
 
   return true;
+}
+
+// --- Placement throttle ---
+
+export function canPlaceThisTurn(state: GameState, color: Color): boolean {
+  if (!state.modeConfig.placementThrottle) return true;
+  const lastTurn = state.lastPlacementTurn[color];
+  if (lastTurn === null) return true;
+  return state.turnNumber - lastTurn >= 2;
 }
 
 // --- Inventory helpers ---

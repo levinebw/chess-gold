@@ -38,6 +38,9 @@ yarn-error.log*
 Thumbs.db
 .DS_Store
 
+# Claude Code skills (third-party)
+.claude/skills/
+
 # Coverage / Testing
 coverage/
 .nyc_output/

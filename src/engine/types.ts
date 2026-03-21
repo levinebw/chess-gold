@@ -38,12 +38,14 @@ export interface GameState {
 
   positionHistory: string[];
 
+  lastPlacementTurn: Record<Color, number | null>;
+
   modeConfig: GameModeConfig;
 }
 
 export type GameStatus = 'active' | 'check' | 'checkmate' | 'stalemate' | 'draw';
 
-export type WinReason = 'checkmate' | 'all-converted' | 'loot-boxes-collected' | 'resign';
+export type WinReason = 'checkmate' | 'all-converted' | 'loot-boxes-collected' | 'all-eliminated' | 'resign';
 
 // --- Game Mode System (ADR-005) ---
 
@@ -57,6 +59,7 @@ export interface GameModeConfig {
   noCheck: boolean;
   centerPulse: boolean;
   standardStart: boolean;
+  unrestrictedPlacement: boolean;
   winConditions: WinCondition[];
 }
 

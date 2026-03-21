@@ -14,6 +14,7 @@ const ModeConfigSchema = z.object({
   noCheck: z.boolean(),
   centerPulse: z.boolean(),
   standardStart: z.boolean(),
+  unrestrictedPlacement: z.boolean(),
   winConditions: z.array(
     z.enum([
       'checkmate',

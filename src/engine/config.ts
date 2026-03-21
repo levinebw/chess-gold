@@ -66,6 +66,7 @@ export const MODE_PRESETS: Record<string, GameModeConfig> = {
     noCheck: false,
     centerPulse: false,
     standardStart: false,
+    unrestrictedPlacement: false,
     winConditions: ['checkmate'],
   },
   'loot-boxes': {
@@ -78,6 +79,7 @@ export const MODE_PRESETS: Record<string, GameModeConfig> = {
     noCheck: false,
     centerPulse: false,
     standardStart: false,
+    unrestrictedPlacement: false,
     winConditions: ['checkmate', 'loot-boxes-collected'],
   },
   'gold-mine': {
@@ -90,6 +92,7 @@ export const MODE_PRESETS: Record<string, GameModeConfig> = {
     noCheck: false,
     centerPulse: false,
     standardStart: false,
+    unrestrictedPlacement: true,
     winConditions: ['checkmate', 'all-eliminated'],
   },
   conqueror: {
@@ -102,6 +105,7 @@ export const MODE_PRESETS: Record<string, GameModeConfig> = {
     noCheck: false,
     centerPulse: false,
     standardStart: true,
+    unrestrictedPlacement: false,
     winConditions: ['all-converted'],
   },
   'kings-chess': {
@@ -114,6 +118,7 @@ export const MODE_PRESETS: Record<string, GameModeConfig> = {
     noCheck: false,
     centerPulse: false,
     standardStart: false,
+    unrestrictedPlacement: false,
     winConditions: ['all-converted'],
   },
   siege: {
@@ -126,6 +131,7 @@ export const MODE_PRESETS: Record<string, GameModeConfig> = {
     noCheck: false,
     centerPulse: true,
     standardStart: true,
+    unrestrictedPlacement: false,
     winConditions: ['checkmate', 'center-occupied'],
   },
   flashlight: {
@@ -138,6 +144,7 @@ export const MODE_PRESETS: Record<string, GameModeConfig> = {
     noCheck: true,
     centerPulse: false,
     standardStart: true,
+    unrestrictedPlacement: false,
     winConditions: ['king-captured'],
   },
   'flashlight-gold': {
@@ -150,6 +157,7 @@ export const MODE_PRESETS: Record<string, GameModeConfig> = {
     noCheck: true,
     centerPulse: false,
     standardStart: false,
+    unrestrictedPlacement: false,
     winConditions: ['king-captured'],
   },
   standard: {
@@ -162,6 +170,7 @@ export const MODE_PRESETS: Record<string, GameModeConfig> = {
     noCheck: false,
     centerPulse: false,
     standardStart: true,
+    unrestrictedPlacement: false,
     winConditions: ['checkmate'],
   },
 };

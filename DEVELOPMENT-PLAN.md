@@ -184,7 +184,7 @@ Game mode 2 — the signature Chess Gold mode with loot boxes and items.
 
 ---
 
-## Phase 8 — Full Platform (`v1.0`) 🔄 IN PROGRESS
+## Phase 8 — Full Platform (`v1.0`) ✅ COMPLETE
 
 Mobile polish, persistent identity, Elo ratings, player profiles.
 
@@ -198,7 +198,7 @@ Mobile polish, persistent identity, Elo ratings, player profiles.
 | 043 | Lead Dev | Post-Game Rating Display & Rated/Casual UI | 8C | ✅ Complete |
 | 044 | Lead Dev | Player Profiles & Leaderboard | 8D | ✅ Complete |
 | 059 | Backend Dev | Backend Deployment: Firestore + Updated Cloud Run | 8E | ✅ Complete |
-| 045 | QA | Phase 8 Regression & Integration Test | 8E | 🔲 Pending |
+| 045 | QA | Phase 8 Regression & Integration Test | 8E | ✅ Complete |
 
 **Dependencies:**
 - Task 039 → 040 (identity needs data layer)
@@ -216,6 +216,38 @@ Mobile polish, persistent identity, Elo ratings, player profiles.
 - Server-authoritative: Elo calculations and match recording happen server-side
 
 **Team:** Lead Developer + Backend Developer + QA Engineer
+
+---
+
+## Phase UX — UX Review & Polish 🟡 IN PROGRESS
+
+Elevate Chess Gold from functional developer UI to App Store-quality visual polish and game feel. Pure CSS/UI/component work — no engine changes.
+
+| Task | Role | Title | Phase | Status |
+|------|------|-------|-------|--------|
+| 060 | UX Designer | Design System: CSS Custom Properties | UX-A | ✅ Complete |
+| 061 | UX Designer | Button & Card Micro-Interactions | UX-B | ✅ Complete |
+| 062 | UX Designer | Dialog Transitions (Enter/Exit) | UX-B | ✅ Complete |
+| 063 | UX Designer | Board Frame & Visual Presentation | UX-C | ✅ Complete |
+| 064 | UX Designer | Gold Transaction Feedback & Placement Mode Polish | UX-C | ✅ Complete |
+| 065 | UX Designer | Page Transitions (Lobby <-> Game) | UX-D | ✅ Complete |
+| 066 | UX Designer | Lobby Visual Hierarchy & Polish | UX-D | ✅ Complete |
+| 067 | UX Designer | Game Over & Victory Feedback | UX-C | ✅ Complete |
+| 068 | UX Designer | Accessibility Pass (WCAG AA) | UX-E | ✅ Complete |
+| 069 | UX Designer | Mobile Polish | UX-E | ✅ Complete |
+| 070 | UX Designer | First-Time Experience & Onboarding | UX-F | 🔲 Pending |
+| 071 | UX Designer | Sound Design Review | UX-G | 🔲 Pending |
+
+**Dependencies:**
+- Task 060 → all other UX tasks (design tokens must exist first)
+- Tasks 061 + 062 can run in parallel (both depend only on 060)
+- Task 062 → 067 (game over feedback uses dialog transitions)
+- Task 061 → 066, 068 (lobby polish and accessibility build on interaction patterns)
+- Task 066 → 070 (onboarding depends on lobby structure)
+- Task 071 is independent (can run anytime)
+
+**Spec:** `specs/UX-REVIEW-SPEC.md`
+**Team:** UX Designer
 
 ---
 
@@ -337,7 +369,8 @@ Game modes 7 and 8. Introduces fog of war and no-check mode — the most archite
 | 5 | v0.5 | Bot Opponent | 024-030 | ✅ Complete |
 | 6 | v0.6 | Conqueror + Standard Chess | (unnumbered) | ✅ Complete |
 | 7 | v0.7 | Loot Boxes | 031-037 | ✅ Complete |
-| 8 | v1.0 | Full Platform | 038-045 | 🔄 In progress |
+| 8 | v1.0 | Full Platform | 038-045, 059 | ✅ Complete |
+| UX | — | UX Review & Polish | 060-071 | 🔲 Pending |
 | 9 | v1.1 | King's Chess + Gold Mine | 046-049 | 🔲 Pending |
 | 10 | v1.2 | Siege | 050-053 | 🔲 Pending |
 | 11 | v1.3 | Flashlight Modes | 054-058 | 🔲 Pending |
