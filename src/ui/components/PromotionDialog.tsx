@@ -15,7 +15,7 @@ interface Props {
 
 export function PromotionDialog({ color: _color, onSelect, onCancel }: Props) {
   return (
-    <div className="promotion-overlay" onClick={onCancel}>
+    <div className="promotion-overlay" onClick={onCancel} role="dialog" aria-label="Promote pawn" aria-modal="true">
       <div className="promotion-dialog" onClick={e => e.stopPropagation()}>
         <div className="promotion-title">Promote to:</div>
         <div className="promotion-choices">
@@ -25,6 +25,7 @@ export function PromotionDialog({ color: _color, onSelect, onCancel }: Props) {
               className="promotion-choice"
               onClick={() => onSelect(role)}
               title={label}
+              aria-label={`Promote to ${label}`}
             >
               <span className="promotion-symbol">{symbol}</span>
             </button>

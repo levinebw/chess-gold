@@ -5,6 +5,7 @@ import { MODE_PRESETS } from '../../engine/config.ts';
 import { BOT_PERSONAS } from '../../engine/bot/personas.ts';
 import { setSessionCredentials, getSessionCredentials } from '../hooks/useOnlineGame.ts';
 import { getStoredPlayerToken, setStoredPlayerToken, getStoredDisplayName, setStoredDisplayName, clearPlayerIdentity } from '../utils/playerIdentity.ts';
+import { isFirstVisit, markVisited } from '../utils/onboarding.ts';
 import type { BotPersona } from '../../engine/bot/types.ts';
 import type { Color, GameModeConfig, GameState } from '../../engine/types.ts';
 import type { ClientEvents, ServerEvents, RoomInfo, AuthResponse } from '../../server/protocol.ts';
@@ -40,6 +41,16 @@ const AVAILABLE_MODES = [
     description: 'Captured pieces switch sides. Convert all pieces to win.',
     icon: '⚔' as React.ReactNode,
   },
+  {
+    key: 'kings-chess',
+    description: 'Gold + conversion. Place every other turn. Convert all to win.',
+    icon: '👑' as React.ReactNode,
+  },
+  {
+    key: 'gold-mine',
+    description: 'Infinite gold. Place anywhere. Eliminate all opponents to win.',
+    icon: '⛏' as React.ReactNode,
+  },
 ];
 
 interface Props {
@@ -72,6 +83,7 @@ export function Lobby({ onLocalGame, onBotGame, onJoinedRoom }: Props) {
   const [rated, setRated] = useState(true);
   const [subView, setSubView] = useState<'lobby' | 'profile' | 'leaderboard'>('lobby');
   const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
+  const [showWelcome, setShowWelcome] = useState(isFirstVisit);
 
   const modeConfig = MODE_PRESETS[selectedMode];
   const showEconomy = modeConfig.goldEconomy;
@@ -273,6 +285,16 @@ export function Lobby({ onLocalGame, onBotGame, onJoinedRoom }: Props) {
   return (
     <div className="lobby">
       <h1>Chess Gold</h1>
+
+      {showWelcome && (
+        <div className="welcome-banner">
+          <p className="welcome-text">
+            Welcome! Start with just a king and earn gold each turn to buy pieces.
+            Pick <strong>Chess Gold</strong> mode below and hit <strong>Local Game</strong> to play.
+          </p>
+          <button className="welcome-dismiss" onClick={() => { setShowWelcome(false); markVisited(); }}>Got it</button>
+        </div>
+      )}
 
       {/* Mode Selection */}
       <div className="lobby-section">

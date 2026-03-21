@@ -39,7 +39,7 @@ export function TurnIndicator() {
   }
 
   return (
-    <div className="turn-indicator">
+    <div className="turn-indicator" aria-live="polite" aria-atomic="true">
       <span className={`turn-status${isThinking ? ' bot-thinking' : ''}`}>{statusText}</span>
       <span className="turn-number">Turn {state.turnNumber}</span>
     </div>

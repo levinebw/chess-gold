@@ -184,7 +184,9 @@ export default function App() {
 
   return (
     <>
-      {content}
+      <div className="view-transition" key={screen.type === 'online' ? `online-${screen.roomId}` : screen.type}>
+        {content}
+      </div>
       <a
         className="github-link"
         href="https://github.com/levinebw/chess-gold"

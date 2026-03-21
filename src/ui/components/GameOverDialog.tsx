@@ -12,6 +12,8 @@ function winMessage(winner: Color, reason: WinReason | null): string {
       return `${name} collected all the loot boxes and wins!`;
     case 'all-converted':
       return `${name} conquered all pieces and wins!`;
+    case 'all-eliminated':
+      return `${name} eliminated all opponents and wins!`;
     default:
       return `Checkmate! ${name} wins!`;
   }
@@ -51,7 +53,7 @@ export function GameOverDialog({ onLeave }: { onLeave?: () => void }) {
   }
 
   return (
-    <div className="game-over-overlay">
+    <div className="game-over-overlay" role="dialog" aria-label="Game Over" aria-modal="true">
       <div className="game-over-dialog">
         <h2>Game Over</h2>
         <p className="game-over-result">
