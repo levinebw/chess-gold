@@ -3,17 +3,17 @@ import type { BotPersona } from './types.ts';
 /**
  * Lizzie -- A friendly pup who loves a good game!
  * Balanced, beginner-friendly. Makes occasional suboptimal moves.
- * Prefers pawns and knights over heavy pieces.
+ * Prefers knights and bishops. Moderately aggressive.
  */
 export const LIZZIE: BotPersona = {
   id: 'lizzie',
   name: 'Lizzie',
   description: 'A friendly pup who loves a good game!',
   avatar: '\u{1F429}', // poodle
-  aggression: 0.4,
+  aggression: 0.55,
   greed: 0.4,
   riskTolerance: 0.3,
-  piecePriority: { pawn: 3, knight: 2, bishop: 2, rook: 1, queen: 1 },
+  piecePriority: { pawn: 1, knight: 3, bishop: 3, rook: 2, queen: 1 },
   searchDepth: 1,
   randomness: 0.25,
 };
