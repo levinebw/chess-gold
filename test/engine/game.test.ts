@@ -547,5 +547,26 @@ describe('Game Reducer', () => {
       const result = applyAction(resigned, { type: 'resign' });
       expect(result).toHaveProperty('code', 'GAME_OVER');
     });
+
+    it('preserves board state (FEN) on resign', () => {
+      const state = createInitialState();
+      const result = applyAction(state, { type: 'resign' }) as GameState;
+      // FEN should still have the kings — resign doesn't change board position
+      expect(result.fen).toContain('K');
+      expect(result.fen).toContain('k');
+    });
+
+    it('does not award gold on resign', () => {
+      const state = createInitialState();
+      const goldBefore = { ...state.gold };
+      const result = applyAction(state, { type: 'resign' }) as GameState;
+      expect(result.gold).toEqual(goldBefore);
+    });
+
+    it('does not advance turn number on resign', () => {
+      const state = createInitialState();
+      const result = applyAction(state, { type: 'resign' }) as GameState;
+      expect(result.turnNumber).toBe(state.turnNumber);
+    });
   });
 });

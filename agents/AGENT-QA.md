@@ -171,76 +171,23 @@ When you discover a failing test or unexpected behavior, report it clearly:
 
 ---
 
-## Phase 1 Test Plan (MVP)
+## Test Plans
 
-These are the test scenarios for the initial Chess Gold implementation. Write tests for these as the corresponding engine modules are built:
+Phase-specific test scenarios are defined in each task file under `tasks/`. When assigned a QA task (e.g., `TASK-045-QA.md`), read it for the full test plan including specific scenarios, expected outputs, and acceptance criteria.
 
-### Gold Economy (`test/engine/gold.test.ts`)
-- Starting gold is 3 for both players
-- Gold increments by 1 at the start of each player's turn
-- Buying a pawn deducts 1 gold
-- Buying a bishop deducts 3 gold
-- Buying a knight deducts 3 gold
-- Buying a rook deducts 5 gold
-- Buying a queen deducts 8 gold
-- Cannot buy a piece with insufficient gold
-- Capturing a pawn awards 0.5 gold
-- Capturing a bishop awards 1.5 gold
-- Capturing a knight awards 1.5 gold
-- Capturing a rook awards 2.5 gold
-- Capturing a queen awards 4 gold
-- Gold handles fractional values (0.5) correctly
-- Gold never goes negative
+**Test file locations:**
 
-### Placement (`test/engine/placement.test.ts`)
-- White can place pieces on rows 1-3
-- Black can place pieces on rows 6-8
-- Cannot place on row 4 or 5 (mid-board)
-- Cannot place on an occupied square
-- Pawns cannot be placed on back rank (row 1 for white, row 8 for black)
-- Pawns can be placed on rows 2-3 (white) / rows 6-7 (black)
-- Placed pawn on row 2 gets the two-square first move option
-- Placement uses the player's entire turn
-- Placement can block check
-- Placement that doesn't resolve check is rejected
-- Cannot place during opponent's turn
+| Scope | Location |
+|-------|----------|
+| Engine unit tests | `test/engine/` |
+| Server unit tests | `test/server/` |
+| E2E smoke tests | `test/e2e/` |
+| QA reports | `test/reports/` |
 
-### Promotion (`test/engine/promotion.test.ts`)
-- Pawn reaching last rank can promote for 1 gold
-- Can promote to bishop, knight, rook, or queen
-- Cannot promote if gold < 1
-- Unpromoted pawn stays on last rank until gold is available
-- Promotion deducts 1 gold
-
-### Game Flow (`test/engine/game.test.ts`)
-- Game starts with only kings (white e1, black e8)
-- White moves first
-- Turn alternates after each action (move or place)
-- Check is detected correctly
-- Checkmate is detected correctly
-- Stalemate is detected correctly
-- A full game can be played to checkmate (integration test)
-
-### En Passant (`test/engine/position.test.ts`)
-- En passant works normally for placed pawns that advance two squares
-- En passant capture awards 0.5 gold
-
-### E2E Smoke Tests — Late Phase 1 (`test/e2e/`)
-
-Once the UI is wired to the engine and the game is playable in the browser, write Playwright E2E tests for these critical user flows:
-
-- Start a game → board renders with two kings, gold displays show 3 for each player
-- Buy a pawn from the shop → click piece in shop → click valid square → pawn appears on board, gold deducted in UI
-- Move a piece → drag/click piece to valid square → board updates, turn passes to opponent
-- Capture a piece → move to occupied square → captured piece removed, gold awarded and displayed
-- Play to checkmate → game over dialog appears with correct winner
-- Attempt an illegal action → placement outside zone, insufficient gold → action is rejected, UI shows feedback
-
-These are **smoke tests**, not exhaustive rule coverage (that's what the engine unit tests are for). They verify the UI and engine are correctly wired together and that a real user can complete a game through the actual interface.
-
-**Tooling:** Playwright. Tests live in `test/e2e/`. Run with `npx playwright test`.
-
-**When to write these:** After the Lead Developer has the board rendering and at least basic shop/placement working. Don't wait for all UI polish — test the integration as soon as it's interactive.
+**Test tooling:**
+- Unit tests: Vitest (`npx vitest run`)
+- E2E tests: Playwright (`npx playwright test`)
+- Server type checks: `npm run server:check`
 
 ---
 

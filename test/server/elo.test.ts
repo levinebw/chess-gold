@@ -61,4 +61,38 @@ describe('calculateElo', () => {
     const { newRatingA } = calculateElo(105, 1500, 0, 10, 10);
     expect(newRatingA).toBeGreaterThanOrEqual(100);
   });
+
+  it('K-factor boundary: exactly 30 games uses K=16', () => {
+    const { newRatingA } = calculateElo(1200, 1200, 1, 30, 30);
+    // K=16: change = 16 * 0.5 = 8
+    expect(newRatingA).toBe(1208);
+  });
+
+  it('K-factor boundary: 29 games uses K=32', () => {
+    const { newRatingA } = calculateElo(1200, 1200, 1, 29, 29);
+    // K=32: change = 32 * 0.5 = 16
+    expect(newRatingA).toBe(1216);
+  });
+
+  it('both experienced players: symmetric with K=16', () => {
+    const { newRatingA, newRatingB } = calculateElo(1200, 1200, 1, 50, 50);
+    expect(newRatingA).toBe(1208);
+    expect(newRatingB).toBe(1192);
+  });
+
+  it('loss scenario: loser rating decreases', () => {
+    const { newRatingA, newRatingB } = calculateElo(1200, 1200, 0, 10, 10);
+    // scoreA = 0 (loss), K=32, expected = 0.5
+    // A: 1200 + 32 * (0 - 0.5) = 1184
+    // B: 1200 + 32 * (1 - 0.5) = 1216
+    expect(newRatingA).toBe(1184);
+    expect(newRatingB).toBe(1216);
+  });
+
+  it('ratings are always integers (rounded)', () => {
+    // Unequal ratings will produce non-integer raw values
+    const { newRatingA, newRatingB } = calculateElo(1250, 1175, 1, 10, 10);
+    expect(Number.isInteger(newRatingA)).toBe(true);
+    expect(Number.isInteger(newRatingB)).toBe(true);
+  });
 });
