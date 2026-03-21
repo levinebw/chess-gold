@@ -12,6 +12,7 @@ import { OnlineStatusBar } from './components/OnlineGameView.tsx';
 import { InventoryPanel } from './components/InventoryPanel.tsx';
 import { LootBoxReward } from './components/LootBoxReward.tsx';
 import { LootBoxCounter } from './components/LootBoxCounter.tsx';
+import { GameHints } from './components/GameHints.tsx';
 import { useGameContext } from './context/GameContext.tsx';
 import { useOnlineGame } from './hooks/useOnlineGame.ts';
 import { GoldCoin } from './components/GoldCoin.tsx';
@@ -105,6 +106,7 @@ function GameView({ isOnline, onLeave }: { isOnline: boolean; onLeave?: () => vo
         )}
         <ActionHistory />
       </div>
+      <GameHints />
       <LootBoxReward />
       <GameOverDialog onLeave={isOnline ? onLeave : undefined} />
       {showRules && <RulesDialog onClose={() => setShowRules(false)} />}
