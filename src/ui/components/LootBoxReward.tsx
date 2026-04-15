@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useGameContext } from '../context/GameContext.tsx';
+import { playSound } from '../utils/sounds.ts';
 import type { LootBoxReward as LootBoxRewardType } from '../../engine/types.ts';
 
 const PIECE_NAMES: Record<string, string> = {
@@ -45,9 +46,10 @@ export function LootBoxReward() {
   const lastReward = 'lastReward' in ctx ? ctx.lastReward as LootBoxRewardType | null : null;
   const dismissReward = 'dismissReward' in ctx ? ctx.dismissReward as () => void : undefined;
 
-  // Auto-dismiss after 4 seconds (longer to read descriptions)
+  // Play sound and auto-dismiss after 4 seconds
   useEffect(() => {
     if (!lastReward) return;
+    playSound('lootBoxOpen');
     const timer = setTimeout(() => {
       dismissReward?.();
     }, 4000);

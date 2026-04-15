@@ -219,7 +219,7 @@ Mobile polish, persistent identity, Elo ratings, player profiles.
 
 ---
 
-## Phase UX — UX Review & Polish 🟡 IN PROGRESS
+## Phase UX — UX Review & Polish ✅ COMPLETE
 
 Elevate Chess Gold from functional developer UI to App Store-quality visual polish and game feel. Pure CSS/UI/component work — no engine changes.
 
@@ -235,8 +235,8 @@ Elevate Chess Gold from functional developer UI to App Store-quality visual poli
 | 067 | UX Designer | Game Over & Victory Feedback | UX-C | ✅ Complete |
 | 068 | UX Designer | Accessibility Pass (WCAG AA) | UX-E | ✅ Complete |
 | 069 | UX Designer | Mobile Polish | UX-E | ✅ Complete |
-| 070 | UX Designer | First-Time Experience & Onboarding | UX-F | 🔲 Pending |
-| 071 | UX Designer | Sound Design Review | UX-G | 🔲 Pending |
+| 070 | UX Designer | First-Time Experience & Onboarding | UX-F | ✅ Complete |
+| 071 | UX Designer | Sound Design Review | UX-G | ✅ Complete |
 
 **Dependencies:**
 - Task 060 → all other UX tasks (design tokens must exist first)
@@ -370,7 +370,7 @@ Game modes 7 and 8. Introduces fog of war and no-check mode — the most archite
 | 6 | v0.6 | Conqueror + Standard Chess | (unnumbered) | ✅ Complete |
 | 7 | v0.7 | Loot Boxes | 031-037 | ✅ Complete |
 | 8 | v1.0 | Full Platform | 038-045, 059 | ✅ Complete |
-| UX | — | UX Review & Polish | 060-071 | 🔲 Pending |
+| UX | — | UX Review & Polish | 060-071 | ✅ Complete |
 | 9 | v1.1 | King's Chess + Gold Mine | 046-049 | 🔲 Pending |
 | 10 | v1.2 | Siege | 050-053 | 🔲 Pending |
 | 11 | v1.3 | Flashlight Modes | 054-058 | 🔲 Pending |

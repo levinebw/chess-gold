@@ -16,7 +16,7 @@ import { GameHints } from './components/GameHints.tsx';
 import { useGameContext } from './context/GameContext.tsx';
 import { useOnlineGame } from './hooks/useOnlineGame.ts';
 import { GoldCoin } from './components/GoldCoin.tsx';
-import { isMuted, setMuted } from './utils/sounds.ts';
+import { isMuted, setMuted, getVolume, setVolume } from './utils/sounds.ts';
 import type { Color, GameModeConfig, GameState } from '../engine/types.ts';
 import type { BotPersona } from '../engine/bot/types.ts';
 import type { Socket } from 'socket.io-client';
@@ -35,6 +35,7 @@ function GameView({ isOnline, onLeave }: { isOnline: boolean; onLeave?: () => vo
   const { undo, canUndo, resetGame, startingGold, setStartingGold, state, flipBoard } = useGameContext();
   const [showRules, setShowRules] = useState(false);
   const [muted, setMutedState] = useState(isMuted);
+  const [vol, setVol] = useState(getVolume);
   const gameInProgress = state.actionHistory.length > 0;
   const showEconomy = state.modeConfig.goldEconomy;
 
@@ -42,6 +43,12 @@ function GameView({ isOnline, onLeave }: { isOnline: boolean; onLeave?: () => vo
     const newVal = !muted;
     setMuted(newVal);
     setMutedState(newVal);
+  };
+
+  const handleVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = parseFloat(e.target.value);
+    setVolume(v);
+    setVol(v);
   };
 
   return (
@@ -86,9 +93,23 @@ function GameView({ isOnline, onLeave }: { isOnline: boolean; onLeave?: () => vo
           <button onClick={flipBoard} className="flip-button" title="Flip board">
             ⟳
           </button>
-          <button onClick={toggleMute} className="mute-button" title={muted ? 'Unmute' : 'Mute'}>
-            {muted ? '\uD83D\uDD07' : '\uD83D\uDD0A'}
-          </button>
+          <div className="volume-control">
+            <button onClick={toggleMute} className="mute-button" title={muted ? 'Unmute' : 'Mute'}>
+              {muted ? '\uD83D\uDD07' : '\uD83D\uDD0A'}
+            </button>
+            {!muted && (
+              <input
+                type="range"
+                className="volume-slider"
+                min="0"
+                max="1"
+                step="0.1"
+                value={vol}
+                onChange={handleVolume}
+                title={`Volume: ${Math.round(vol * 100)}%`}
+              />
+            )}
+          </div>
           <TurnIndicator />
         </div>
       </header>
